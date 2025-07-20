@@ -22,7 +22,7 @@ export function LoginPortal({ onLogin }: LoginPortalProps) {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // Dummy credentials
+  // Dummy credentials for demo purposes
   const credentials = {
     admin: { username: "admin", password: "admin", name: "Sabir (Owner)" },
     contractor: { username: "contractor", password: "contractor", name: "Jessica Davis" },
@@ -35,17 +35,25 @@ export function LoginPortal({ onLogin }: LoginPortalProps) {
     setIsLoading(true)
     setError("")
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const cred = credentials[selectedRole]
-    if (username === cred.username && password === cred.password) {
-      onLogin(username, selectedRole, cred.name)
-    } else {
-      setError("Invalid credentials. Please check your username and password.")
+      const cred = credentials[selectedRole]
+
+      // Trim whitespace and compare credentials
+      if (username.trim().toLowerCase() === cred.username && password.trim() === cred.password) {
+        // Successful login
+        onLogin(username.trim(), selectedRole, cred.name)
+      } else {
+        // Failed login
+        setError(`Invalid credentials for ${selectedRole}. Please check your username and password.`)
+      }
+    } catch (err) {
+      setError("An error occurred during login. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }
 
   const quickLogin = (role: "admin" | "contractor" | "client" | "employee") => {
@@ -53,6 +61,7 @@ export function LoginPortal({ onLogin }: LoginPortalProps) {
     setUsername(cred.username)
     setPassword(cred.password)
     setSelectedRole(role)
+    setError("") // Clear any existing errors
   }
 
   const getRoleIcon = (role: string) => {
@@ -120,7 +129,10 @@ export function LoginPortal({ onLogin }: LoginPortalProps) {
                 </Label>
                 <Select
                   value={selectedRole}
-                  onValueChange={(value: "admin" | "contractor" | "client" | "employee") => setSelectedRole(value)}
+                  onValueChange={(value: "admin" | "contractor" | "client" | "employee") => {
+                    setSelectedRole(value)
+                    setError("") // Clear error when role changes
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -162,9 +174,13 @@ export function LoginPortal({ onLogin }: LoginPortalProps) {
                   id="username"
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value)
+                    setError("") // Clear error when typing
+                  }}
                   placeholder="Enter your username"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -176,9 +192,13 @@ export function LoginPortal({ onLogin }: LoginPortalProps) {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    setError("") // Clear error when typing
+                  }}
                   placeholder="Enter your password"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -217,6 +237,7 @@ export function LoginPortal({ onLogin }: LoginPortalProps) {
                   size="sm"
                   onClick={() => quickLogin(role as "admin" | "contractor" | "client" | "employee")}
                   className={`flex items-center gap-2 text-xs ${getRoleColor(role)}`}
+                  disabled={isLoading}
                 >
                   {getRoleIcon(role)}
                   {role.charAt(0).toUpperCase() + role.slice(1)}

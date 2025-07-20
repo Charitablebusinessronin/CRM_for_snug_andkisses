@@ -15,7 +15,13 @@
     "clean": "rm -rf .next out",
     "analyze": "ANALYZE=true npm run build"
   },
-  "keywords": ["crm", "hipaa", "zoho", "nextjs", "healthcare"],
+  "keywords": [
+    "crm",
+    "hipaa",
+    "zoho",
+    "nextjs",
+    "healthcare"
+  ],
   "author": "Development Team",
   "license": "PROPRIETARY",
   "dependencies": {
@@ -47,6 +53,7 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
+    "@tanstack/react-query": "^5.83.0",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
