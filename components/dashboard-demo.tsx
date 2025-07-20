@@ -1,29 +1,18 @@
 "use client"
-import { useState } from "react"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "../lib/auth-context"
 import { ContractorPortal } from "./contractor-portal"
 import { ClientPortal } from "./client-portal"
 import { AdminDashboard } from "./admin-dashboard"
 import { EmployeePortal } from "./employee-portal"
-import { LoginPortal } from "./login-portal"
 
 export function DashboardDemo() {
-  const [user, setUser] = useState<{
-    username: string
-    role: "admin" | "contractor" | "client" | "employee"
-    name: string
-  } | null>(null)
+  const { user, logout } = useAuth()
 
-  const handleLogin = (username: string, role: "admin" | "contractor" | "client" | "employee", name: string) => {
-    setUser({ username, role, name })
-  }
-
-  const handleLogout = () => {
-    setUser(null)
-  }
-
+  // Since this component is wrapped in ProtectedRoute, user should always exist.
   if (!user) {
-    return <LoginPortal onLogin={handleLogin} />
+    return <div>Loading user information...</div> // Or a redirect, though ProtectedRoute handles it.
   }
 
   return (
@@ -40,7 +29,7 @@ export function DashboardDemo() {
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Welcome, {user.name}</p>
-            <button onClick={handleLogout} className="text-sm text-[#3B2352] hover:underline">
+            <button onClick={logout} className="text-sm text-[#3B2352] hover:underline">
               Logout
             </button>
           </div>
