@@ -1,46 +1,43 @@
-# Snugs and Kisses CRM
+# Snugs and Kisses CRM System
 
-*HIPAA-Compliant Customer Relationship Management System*
+[![Next.js](https://img.shields.io/badge/Next.js-15.2.4-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Zoho CRM](https://img.shields.io/badge/Zoho-CRM_Integration-green)](https://www.zoho.com/crm/)
+[![HIPAA](https://img.shields.io/badge/HIPAA-Compliant-red)](https://www.hhs.gov/hipaa/index.html)
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/charitablebusinessronins-projects/v0-snugs-and-kisses-crm)
-[![HIPAA Compliance](https://img.shields.io/badge/HIPAA-Compliant-blue?style=for-the-badge)](https://www.hhs.gov/hipaa/index.html)
-[![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org/)
+A modern, HIPAA-compliant customer relationship management system built with Next.js and integrated with Zoho One for enterprise-grade data management and security.
 
-## 📋 Project Status
+## Features
 
-### ✅ Completed
-- Project structure and initial setup
-- Zoho One integration configuration
-- Environment variables configuration
-- Basic authentication setup (pending client credentials)
-- HIPAA compliance measures
+- **Employee Portal** - Comprehensive onboarding with form validation
+- **Service Management** - Request tracking for Postpartum, Birth Doula, and Childcare services
+- **Video Integration** - Welcome videos with React-Player
+- **HIPAA Compliance** - Complete audit logging and secure data storage
+- **Zoho Integration** - Direct CRM integration with REST API
+- **Role-Based Auth** - Protected routes with authentication context
+- **Modern UI** - shadcn/ui components with Tailwind CSS
 
-### ⏳ Pending Client Review
-- Final Zoho OAuth credentials
-- Production environment configuration
-- Client-specific customizations
+## Tech Stack
 
-## 🔐 Authentication Status
+- **Framework:** Next.js 15.2.4 with App Router
+- **Frontend:** React 19, TypeScript, Tailwind CSS
+- **UI Components:** shadcn/ui, Radix UI primitives
+- **Forms:** React Hook Form with Zod validation
+- **Authentication:** Custom context with role-based access
+- **Database:** Zoho CRM (Leads & Cases modules)
+- **Video:** React-Player with multi-format support
+- **Notifications:** Sonner toast notifications
 
-**Note (2025-07-19):** Awaiting client-provided Zoho OAuth credentials for full authentication implementation. The system is pre-configured but requires client approval and credentials to be fully operational.
+## Prerequisites
 
-## 🏛️ HIPAA Compliance
+- Node.js 18+ and npm/yarn/pnpm
+- Zoho One account with CRM access
+- OAuth credentials for Zoho integration
 
-### Implemented Measures
-- Data encryption at rest and in transit
-- Secure environment variable management
-- Audit logging for all data access
-- Role-based access control (RBAC)
-- Automatic session timeout
-- Secure password policies
+## Quick Start
 
-### Required Client Actions
-1. Sign Business Associate Agreement (BAA) with Zoho
-2. Configure Zoho account for HIPAA compliance
-3. Provide production credentials for secure setup
-
-## 🚀 Getting Started
-
+1. **Clone the repository**
 ### Prerequisites
 - Node.js 18+
 - pnpm

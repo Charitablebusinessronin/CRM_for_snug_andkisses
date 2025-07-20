@@ -1,13 +1,23 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "snugs-kisses-crm",
+  "version": "1.0.0",
+  "description": "HIPAA-compliant CRM system with Zoho One integration for Snugs and Kisses",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "echo \"Tests not implemented yet\" && exit 0",
+    "clean": "rm -rf .next out",
+    "analyze": "ANALYZE=true npm run build"
   },
+  "keywords": ["crm", "hipaa", "zoho", "nextjs", "healthcare"],
+  "author": "Development Team",
+  "license": "PROPRIETARY",
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "latest",
