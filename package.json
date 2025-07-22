@@ -68,6 +68,7 @@
     "react-day-picker": "latest",
     "react-dom": "^19",
     "react-hook-form": "latest",
+    "react-player": "^2.16.0",
     "react-resizable-panels": "latest",
     "recharts": "latest",
     "sonner": "latest",

@@ -3,7 +3,7 @@
 import { useState, useEffect, createContext, useContext } from "react"
 import type { User } from "@/lib/types"
 import { getStoredAuth, setStoredAuth, clearStoredAuth, isTokenExpired } from "@/lib/auth"
-import { authAPI } from "@/lib/api"
+import { api as authAPI } from "@/lib/api"
 
 interface AuthContextType {
   user: User | null

@@ -1,89 +1,63 @@
-// Zoho CRM REST API Integration
-// Uses direct API calls instead of SDK for simplicity and reliability
+import { ZCRMRestClient } from 'zcrmsdk';
 
-interface ZohoRecord {
-  [key: string]: any;
-}
+// Initialize Zoho CRM Client
+const initializeCRM = async () => {
+  try {
+    await ZCRMRestClient.initialize({
+      client_id: process.env.ZOHO_CLIENT_ID,
+      client_secret: process.env.ZOHO_CLIENT_SECRET,
+      redirect_uri: process.env.ZOHO_ONE_REDIRECT_URI, // Using the more generic redirect URI
+      user_identifier: process.env.ZOHO_USER_EMAIL,
+      // Note: Token storage needs a robust implementation, placeholder for now
+      // token_management: 'token_storage_module.TokenStorage',
+    });
+  } catch (error) {
+    console.error('Failed to initialize Zoho CRM Client:', error);
+    throw new Error('CRM Initialization Failed');
+  }
+};
 
-interface ZohoResponse {
-  data: Array<{
-    code: string;
-    details: {
-      id: string;
-    };
-    message: string;
-    status: string;
-  }>;
-}
+// Combined function to sync a contact and create a corresponding deal
+export const syncContactAndCreateDeal = async (inquiryData: any) => {
+  await initializeCRM();
 
-export class ZohoCRM {
-  private accessToken: string;
-  private baseUrl: string;
+  // 1. Create or Update Contact in Zoho CRM
+  const contactPayload = {
+    First_Name: inquiryData.firstName,
+    Last_Name: inquiryData.lastName,
+    Email: inquiryData.email,
+    Phone: inquiryData.phone || '',
+    Description: `Website Inquiry: ${inquiryData.message || 'N/A'}`,
+  };
 
-  constructor() {
-    this.baseUrl = process.env.ZOHO_CRM_API_URL || 'https://www.zohoapis.com/crm/v2';
-    this.accessToken = process.env.ZOHO_ACCESS_TOKEN || '';
+  const contactResponse = await ZCRMRestClient.API.MODULES.post({
+    module: 'Contacts',
+    body: JSON.stringify([contactPayload]),
+  });
+
+  const contactDetails = contactResponse.data[0].details;
+  if (!contactDetails.id) {
+    throw new Error('Failed to create contact in CRM');
   }
 
-  // Create a record in any Zoho CRM module
-  async createRecord(module: string, data: ZohoRecord): Promise<string | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/${module}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Zoho-oauthtoken ${this.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: [data]
-        }),
-      });
+  // 2. Create a Deal (Lead) associated with the Contact
+  const dealPayload = {
+    Deal_Name: `Website Inquiry - ${inquiryData.firstName} ${inquiryData.lastName}`,
+    Stage: 'Qualification', // Default stage for new web leads
+    Contact_Name: { id: contactDetails.id }, // Link to the newly created contact
+    Closing_Date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0], // Tentative close date 30 days out
+  };
 
-      if (!response.ok) {
-        throw new Error(`Zoho API error: ${response.status} ${response.statusText}`);
-      }
+  const dealResponse = await ZCRMRestClient.API.MODULES.post({
+    module: 'Deals',
+    body: JSON.stringify([dealPayload]),
+  });
 
-      const result: ZohoResponse = await response.json();
-      
-      if (result.data && result.data[0] && result.data[0].status === 'success') {
-        return result.data[0].details.id;
-      }
-      
-      throw new Error(`Zoho record creation failed: ${result.data[0]?.message || 'Unknown error'}`);
-    } catch (error) {
-      console.error('Zoho CRM API Error:', error);
-      return null;
-    }
+  const dealDetails = dealResponse.data[0].details;
+  if (!dealDetails.id) {
+    // Optional: Add logic to delete the contact if deal creation fails
+    throw new Error('Failed to create deal in CRM');
   }
 
-  // Create employee/client record in Leads module
-  async createEmployeeRecord(employeeData: any): Promise<string | null> {
-    const zohoRecord = {
-      Last_Name: employeeData.fullName || 'Unknown',
-      Email: employeeData.email,
-      Phone: employeeData.phone,
-      Company: employeeData.employer || 'Snugs and Kisses Client',
-      Lead_Source: 'Employee Portal',
-      Description: `Employee info submitted via portal. Address: ${employeeData.address || 'Not provided'}`,
-      // Add custom fields as needed
-      Custom_Field_1: JSON.stringify(employeeData), // Store full data as JSON for now
-    };
-
-    return this.createRecord('Leads', zohoRecord);
-  }
-
-  // Create service request in Cases module
-  async createServiceRequest(serviceData: any): Promise<string | null> {
-    const zohoRecord = {
-      Subject: `Service Request: ${serviceData.serviceType}`,
-      Status: 'New',
-      Priority: 'Medium',
-      Origin: 'Employee Portal',
-      Description: `Service request for ${serviceData.serviceType} submitted via employee portal.`,
-      // Link to employee if we have the ID
-      Related_To: serviceData.employeeId || null,
-    };
-
-    return this.createRecord('Cases', zohoRecord);
-  }
-}
+  return { contactId: contactDetails.id, dealId: dealDetails.id };
+};
