@@ -113,22 +113,22 @@ export function CustomerForm({ customer, onSuccess }: CustomerFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="firstName">First Name</Label>
-          <Input id="firstName" {...form.register("firstName")} error={form.formState.errors.firstName?.message} />
+          <Input id="firstName" {...form.register("firstName")} />
         </div>
         <div>
           <Label htmlFor="lastName">Last Name</Label>
-          <Input id="lastName" {...form.register("lastName")} error={form.formState.errors.lastName?.message} />
+          <Input id="lastName" {...form.register("lastName")} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" {...form.register("email")} error={form.formState.errors.email?.message} />
+          <Input id="email" type="email" {...form.register("email")} />
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" {...form.register("phone")} error={form.formState.errors.phone?.message} />
+          <Input id="phone" {...form.register("phone")} />
         </div>
       </div>
 
@@ -139,20 +139,18 @@ export function CustomerForm({ customer, onSuccess }: CustomerFormProps) {
           <Input
             id="street"
             {...form.register("address.street")}
-            error={form.formState.errors.address?.street?.message}
           />
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
             <Label htmlFor="city">City</Label>
-            <Input id="city" {...form.register("address.city")} error={form.formState.errors.address?.city?.message} />
+            <Input id="city" {...form.register("address.city")} />
           </div>
           <div>
             <Label htmlFor="state">State</Label>
             <Input
               id="state"
               {...form.register("address.state")}
-              error={form.formState.errors.address?.state?.message}
             />
           </div>
           <div>
@@ -160,7 +158,6 @@ export function CustomerForm({ customer, onSuccess }: CustomerFormProps) {
             <Input
               id="zipCode"
               {...form.register("address.zipCode")}
-              error={form.formState.errors.address?.zipCode?.message}
             />
           </div>
         </div>
@@ -174,7 +171,6 @@ export function CustomerForm({ customer, onSuccess }: CustomerFormProps) {
             <Input
               id="emergencyName"
               {...form.register("emergencyContact.name")}
-              error={form.formState.errors.emergencyContact?.name?.message}
             />
           </div>
           <div>
@@ -182,7 +178,6 @@ export function CustomerForm({ customer, onSuccess }: CustomerFormProps) {
             <Input
               id="emergencyPhone"
               {...form.register("emergencyContact.phone")}
-              error={form.formState.errors.emergencyContact?.phone?.message}
             />
           </div>
         </div>
@@ -191,7 +186,6 @@ export function CustomerForm({ customer, onSuccess }: CustomerFormProps) {
           <Input
             id="relationship"
             {...form.register("emergencyContact.relationship")}
-            error={form.formState.errors.emergencyContact?.relationship?.message}
           />
         </div>
       </div>

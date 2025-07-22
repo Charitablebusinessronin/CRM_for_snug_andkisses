@@ -24,7 +24,7 @@ function ClientDashboard() {
   const handleRequestService = async (serviceType: 'postpartum' | 'birth' | 'sitter' | 'both') => {
     setIsRequesting(true);
     try {
-      const response = await fetch('/api/service-request', {
+      const response = await fetch('/api/v1/service-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

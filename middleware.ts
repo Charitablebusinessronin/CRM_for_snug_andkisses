@@ -1,36 +1,60 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { logApiRequest } from './lib/hipaa-audit';
 
-// Security headers for HIPAA compliance
-const securityHeaders = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.zoho.com https://*.zohoapis.com;"
-};
+// Define allowed origins
+const allowedOrigins = [
+  'http://localhost:8000',
+  'https://snugsandkisses.com',
+];
 
-export function middleware(request: NextRequest) {
-  // Apply security headers to all responses
-  const response = NextResponse.next();
-  
-  // Add security headers
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
+export async function middleware(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  const origin = requestHeaders.get('origin');
 
-  // HSTS Header - Only in production
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  // Default response
+  let response: NextResponse;
+
+  // Handle preflight requests first
+  if (request.method === 'OPTIONS') {
+    if (origin && allowedOrigins.includes(origin)) {
+      response = new NextResponse(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': origin,
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true',
+        },
+      });
+    } else {
+      response = new NextResponse(null, { status: 403, statusText: "Forbidden" });
+    }
+    // Log the preflight request and return
+    await logApiRequest(request, { status: response.status, statusText: response.statusText });
+    return response;
   }
+
+  // Handle actual API requests
+  response = NextResponse.next();
+  
+  // Add Vary: Origin header to all responses
+  response.headers.set('Vary', 'Origin');
+
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+  }
+
+  // Log the request
+  await logApiRequest(request, { status: response.status, statusText: response.statusText });
 
   return response;
 }
 
-// Apply middleware to all routes
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: '/api/:path*',
 };

@@ -1,15 +1,74 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Calendar, Clock, DollarSign, Heart, MessageSquare, Star, User, Baby, Shield } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import { DoulaList } from "./doula-list"
+import { AppointmentScheduler } from "./appointment-scheduler"
+
+interface DashboardData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  totalHours: number;
+  usedHours: number;
+}
 
 export function ClientPortal() {
-  const [clientStage] = useState("active") // prospect, intake, active, paused
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/v1/client-dashboard');
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to fetch dashboard data.');
+        }
+
+        setData(result.data);
+        toast.success(result.message);
+      } catch (error: any) {
+        toast.error(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const hoursRemaining = data ? data.totalHours - data.usedHours : 0;
+  const sessionsUsed = data ? Math.floor(data.usedHours / 4) : 0; // Assuming 4 hours per session
+  const progressValue = data && data.totalHours > 0 ? (data.usedHours / data.totalHours) * 100 : 0;
+
+  if (isLoading) {
+    return <Skeleton className="w-full h-[500px]" />;
+  }
+
+  if (!data) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Could not load client data. Please try again later.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -18,7 +77,7 @@ export function ClientPortal() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
             <Heart className="h-6 w-6 text-[#D4AF37]" />
-            Welcome, Sarah!
+            Welcome, {data.firstName}!
           </CardTitle>
           <CardDescription className="text-white/80" style={{ fontFamily: "Lato, sans-serif" }}>
             Your next appointment is tomorrow at 10:00 AM with Jessica
@@ -31,14 +90,14 @@ export function ClientPortal() {
         <Card className="border-[#D7C7ED]/50">
           <CardContent className="p-4 text-center">
             <Clock className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">24</div>
+            <div className="text-2xl font-bold text-[#3B2352]">{hoursRemaining}</div>
             <div className="text-sm text-gray-600">Hours Remaining</div>
           </CardContent>
         </Card>
         <Card className="border-[#D7C7ED]/50">
           <CardContent className="p-4 text-center">
             <Calendar className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">8</div>
+            <div className="text-2xl font-bold text-[#3B2352]">{sessionsUsed}</div>
             <div className="text-sm text-gray-600">Sessions Used</div>
           </CardContent>
         </Card>
@@ -118,9 +177,9 @@ export function ClientPortal() {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Hours Used</span>
-                  <span>16 of 40 hours</span>
+                  <span>{data.usedHours} of {data.totalHours} hours</span>
                 </div>
-                <Progress value={40} className="h-2" />
+                <Progress value={progressValue} className="h-2" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
@@ -193,10 +252,7 @@ export function ClientPortal() {
               <CardDescription>Browse and select your preferred doula</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <User className="h-12 w-12 mx-auto mb-4 text-[#D7C7ED]" />
-                <p>Doula selection interface would be implemented here</p>
-              </div>
+              <DoulaList />
             </CardContent>
           </Card>
         </TabsContent>

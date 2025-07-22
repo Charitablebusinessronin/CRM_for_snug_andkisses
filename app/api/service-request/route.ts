@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logAuditEvent } from '@/lib/audit';
-import { ZohoCRM } from '@/lib/zoho-crm';
+
 
 interface ServiceRequestPayload {
   serviceType: 'postpartum' | 'birth' | 'sitter' | 'both';
@@ -30,29 +30,12 @@ export async function POST(request: Request) {
     console.log(`New Service Request Received: ${serviceType}`);
 
     // --- Zoho CRM Integration ---
-    const zohoCRM = new ZohoCRM();
-    const serviceRequestId = await zohoCRM.createServiceRequest({ serviceType });
     
-    if (!serviceRequestId) {
-      throw new Error('Failed to save service request to Zoho CRM');
-    }
     // --- End Zoho CRM Integration ---
-
-    // --- Audit Log Integration ---
-    await logAuditEvent({
-      action: 'CREATE_SERVICE_REQUEST',
-      userId: 'placeholder-user-id',
-      details: {
-        serviceType: serviceType,
-        zohoRecordId: serviceRequestId,
-      },
-    });
-    // --- End Audit Log Integration ---
 
     return NextResponse.json(
       { 
         message: `Service request for '${serviceType}' submitted successfully.`,
-        zohoRecordId: serviceRequestId,
         success: true
       },
       { status: 201 }
