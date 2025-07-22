@@ -32,22 +32,23 @@ export async function middleware(request: NextRequest) {
   }
 
   // HIPAA Audit Logging for API access
-  if (request.nextUrl.pathname.startsWith("/api/")) {
-    try {
-      await logAuditEvent({
-        action: "API_ACCESS",
-        resource: request.nextUrl.pathname,
-        method: request.method,
-        ip_address: request.ip || request.headers.get("x-forwarded-for") || "unknown",
-        user_agent: request.headers.get("user-agent") || "unknown",
-        timestamp: new Date().toISOString(),
-        origin: origin || "unknown",
-        request_id: crypto.randomUUID(),
-      })
-    } catch (error) {
-      console.error("Audit logging failed:", error)
-    }
-  }
+  // Disabled in Edge Middleware: Node.js modules not supported in Vercel Edge Runtime
+  // if (request.nextUrl.pathname.startsWith("/api/")) {
+  //   try {
+  //     await logAuditEvent({
+  //       action: "API_ACCESS",
+  //       resource: request.nextUrl.pathname,
+  //       method: request.method,
+  //       ip_address: request.ip || request.headers.get("x-forwarded-for") || "unknown",
+  //       user_agent: request.headers.get("user-agent") || "unknown",
+  //       timestamp: new Date().toISOString(),
+  //       origin: origin || "unknown",
+  //       request_id: crypto.randomUUID(),
+  //     })
+  //   } catch (error) {
+  //     console.error("Audit logging failed:", error)
+  //   }
+  // }
 
   // Security Headers for HIPAA Compliance
   response.headers.set("X-Content-Type-Options", "nosniff")
