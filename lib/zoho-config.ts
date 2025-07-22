@@ -1,39 +1,47 @@
+// Zoho API configuration and utilities
 export const ZOHO_CONFIG = {
-  CLIENT_ID: process.env.ZOHO_ONE_CLIENT_ID!,
-  CLIENT_SECRET: process.env.ZOHO_ONE_CLIENT_SECRET!,
-  REDIRECT_URI: process.env.ZOHO_ONE_REDIRECT_URI!,
-  ACCESS_TYPE: process.env.ZOHO_ONE_ACCESS_TYPE || "offline",
-
-  // API Endpoints
-  ACCOUNTS_URL: process.env.ZOHO_ACCOUNTS_URL || "https://accounts.zoho.com",
-  CRM_API_URL: process.env.ZOHO_CRM_API_URL || "https://www.zohoapis.com/crm/v2",
-  BOOKS_API_URL: process.env.ZOHO_BOOKS_API_URL || "https://books.zohoapis.com/api/v3",
-  CAMPAIGNS_API_URL: process.env.ZOHO_CAMPAIGNS_API_URL || "https://campaigns.zoho.com/api/v1.1",
-
-  // OAuth Scopes
-  SCOPES: [
-    "ZohoCRM.modules.ALL",
-    "ZohoCRM.settings.ALL",
-    "ZohoBooks.fullaccess.all",
-    "ZohoCampaigns.campaign.ALL",
-    "ZohoCampaigns.contact.ALL",
-  ].join(","),
-
-  // Token storage keys
-  ACCESS_TOKEN_KEY: "zoho_access_token",
-  REFRESH_TOKEN_KEY: "zoho_refresh_token",
-  EXPIRES_AT_KEY: "zoho_token_expires_at",
+  clientId: process.env.ZOHO_ONE_CLIENT_ID,
+  clientSecret: process.env.ZOHO_ONE_CLIENT_SECRET,
+  redirectUri: process.env.ZOHO_ONE_REDIRECT_URI,
+  accountsUrl: process.env.ZOHO_ACCOUNTS_URL,
+  crmApiUrl: process.env.ZOHO_CRM_API_URL,
+  booksApiUrl: process.env.ZOHO_BOOKS_API_URL,
+  campaignsApiUrl: process.env.ZOHO_CAMPAIGNS_API_URL,
 }
 
-export const getAuthorizationUrl = () => {
-  const params = new URLSearchParams({
-    response_type: "code",
-    client_id: ZOHO_CONFIG.CLIENT_ID,
-    scope: ZOHO_CONFIG.SCOPES,
-    redirect_uri: ZOHO_CONFIG.REDIRECT_URI,
-    access_type: ZOHO_CONFIG.ACCESS_TYPE,
-    prompt: "consent",
-  })
+export const API_ENDPOINTS = {
+  crm: {
+    contacts: `${ZOHO_CONFIG.crmApiUrl}/Contacts`,
+    deals: `${ZOHO_CONFIG.crmApiUrl}/Deals`,
+    accounts: `${ZOHO_CONFIG.crmApiUrl}/Accounts`,
+    leads: `${ZOHO_CONFIG.crmApiUrl}/Leads`,
+  },
+  books: {
+    customers: `${ZOHO_CONFIG.booksApiUrl}/contacts`,
+    invoices: `${ZOHO_CONFIG.booksApiUrl}/invoices`,
+    estimates: `${ZOHO_CONFIG.booksApiUrl}/estimates`,
+  },
+}
 
-  return `${ZOHO_CONFIG.ACCOUNTS_URL}/oauth/v2/auth?${params.toString()}`
+export interface ZohoContact {
+  id: string
+  First_Name: string
+  Last_Name: string
+  Email: string
+  Phone: string
+  Account_Name?: string
+  Lead_Source?: string
+  Created_Time: string
+  Modified_Time: string
+}
+
+export interface ZohoDeal {
+  id: string
+  Deal_Name: string
+  Account_Name: string
+  Contact_Name: string
+  Stage: string
+  Amount: number
+  Closing_Date: string
+  Created_Time: string
 }

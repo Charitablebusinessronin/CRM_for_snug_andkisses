@@ -1,37 +1,77 @@
-import type { User } from "./types"
+// Authentication utilities
+import type { NextAuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 
-export interface AuthState {
-  user: User | null
-  token: string | null
-  isAuthenticated: boolean
-  isLoading: boolean
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        try {
+          // This would integrate with your Catalyst backend
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          })
+
+          if (!response.ok) {
+            return null
+          }
+
+          const user = await response.json()
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role, // contractor, client, admin, employee
+          }
+        } catch (error) {
+          console.error("Auth error:", error)
+          return null
+        }
+      },
+    }),
+  ],
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.sub
+        session.user.role = token.role as string
+      }
+      return session
+    },
+  },
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
 }
 
-export const getStoredAuth = (): { token: string | null; user: User | null } => {
-  if (typeof window === "undefined") return { token: null, user: null }
-
-  const token = localStorage.getItem("auth_token")
-  const userStr = localStorage.getItem("auth_user")
-  const user = userStr ? JSON.parse(userStr) : null
-
-  return { token, user }
-}
-
-export const setStoredAuth = (token: string, user: User) => {
-  localStorage.setItem("auth_token", token)
-  localStorage.setItem("auth_user", JSON.stringify(user))
-}
-
-export const clearStoredAuth = () => {
-  localStorage.removeItem("auth_token")
-  localStorage.removeItem("auth_user")
-}
-
-export const isTokenExpired = (token: string): boolean => {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]))
-    return payload.exp * 1000 < Date.now()
-  } catch {
-    return true
-  }
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: "contractor" | "client" | "admin" | "employee"
 }

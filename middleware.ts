@@ -1,36 +1,67 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server"
+import { logAuditEvent } from "@/lib/hipaa-audit"
 
-// Security headers for HIPAA compliance
-const securityHeaders = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.zoho.com https://*.zohoapis.com;"
-};
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next()
 
-export function middleware(request: NextRequest) {
-  // Apply security headers to all responses
-  const response = NextResponse.next();
-  
-  // Add security headers
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
+  // CORS Configuration for cross-origin requests
+  const allowedOrigins = [
+    "http://localhost:8000", // Website
+    "http://localhost:8001", // CRM
+    "https://snugsandkisses.com",
+    process.env.NEXT_PUBLIC_WEBSITE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+  ].filter(Boolean)
 
-  // HSTS Header - Only in production
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  const origin = request.headers.get("origin")
+
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin)
   }
 
-  return response;
+  response.headers.set("Access-Control-Allow-Credentials", "true")
+  response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, X-File-Name",
+  )
+
+  // Handle preflight requests
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 200, headers: response.headers })
+  }
+
+  // HIPAA Audit Logging for API access
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    try {
+      await logAuditEvent({
+        action: "API_ACCESS",
+        resource: request.nextUrl.pathname,
+        method: request.method,
+        ip_address: request.ip || request.headers.get("x-forwarded-for") || "unknown",
+        user_agent: request.headers.get("user-agent") || "unknown",
+        timestamp: new Date().toISOString(),
+        origin: origin || "unknown",
+        request_id: crypto.randomUUID(),
+      })
+    } catch (error) {
+      console.error("Audit logging failed:", error)
+    }
+  }
+
+  // Security Headers for HIPAA Compliance
+  response.headers.set("X-Content-Type-Options", "nosniff")
+  response.headers.set("X-Frame-Options", "DENY")
+  response.headers.set("X-XSS-Protection", "1; mode=block")
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+  response.headers.set(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;",
+  )
+
+  return response
 }
 
-// Apply middleware to all routes
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
-};
+  matcher: ["/api/:path*", "/((?!_next/static|_next/image|favicon.ico).*)"],
+}
