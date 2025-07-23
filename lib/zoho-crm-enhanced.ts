@@ -1,3 +1,8 @@
+/**
+ * This file contains an enhanced service for interacting with the Zoho CRM API.
+ * It provides methods for creating, updating, and retrieving contacts and cases,
+ * as well as handling authentication and error logging.
+ */
 import { logAuditEvent } from "./hipaa-audit"
 
 interface ZohoConfig {

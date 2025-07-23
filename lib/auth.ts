@@ -1,4 +1,7 @@
-// Authentication utilities
+/**
+ * Authentication utilities for NextAuth.
+ * This file contains the configuration for NextAuth, including the providers, session strategy, and callbacks.
+ */
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 

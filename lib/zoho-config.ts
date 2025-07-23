@@ -1,4 +1,7 @@
-// Zoho API configuration and utilities
+/**
+ * This file contains the configuration for the Zoho API, including the client ID, client secret, and API endpoints.
+ * It also defines interfaces for Zoho objects such as contacts and deals.
+ */
 export const ZOHO_CONFIG = {
   clientId: process.env.ZOHO_ONE_CLIENT_ID,
   clientSecret: process.env.ZOHO_ONE_CLIENT_SECRET,

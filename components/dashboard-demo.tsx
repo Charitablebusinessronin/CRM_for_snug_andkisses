@@ -5,6 +5,11 @@ import { ClientPortal } from "./client-portal"
 import { AdminDashboard } from "./admin-dashboard"
 import { EmployeePortal } from "./employee-portal"
 
+/**
+ * A component that demonstrates the different dashboard views available in the CRM.
+ * It uses tabs to switch between the contractor, client, admin, and employee portals.
+ * @returns {JSX.Element} The dashboard demo component.
+ */
 export function DashboardDemo() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#D7C7ED]/10 to-white">

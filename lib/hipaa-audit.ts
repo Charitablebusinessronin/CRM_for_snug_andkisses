@@ -1,3 +1,7 @@
+/**
+ * This file contains the implementation of a HIPAA audit logger.
+ * It provides functionality for logging, storing, and verifying audit events.
+ */
 import fs from "fs/promises"
 import path from "path"
 import crypto from "crypto"

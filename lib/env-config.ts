@@ -1,4 +1,8 @@
-// Environment configuration with validation
+/**
+ * Environment configuration with validation.
+ * This file contains the configuration for the application, including Zoho credentials, API URLs, and other settings.
+ * It also provides a function to validate that all required environment variables are set.
+ */
 export const ENV_CONFIG = {
   // Zoho Configuration
   ZOHO_CLIENT_ID: process.env.ZOHO_CLIENT_ID || process.env.ZOHO_ONE_CLIENT_ID,
@@ -24,7 +28,10 @@ export const ENV_CONFIG = {
   SEND_CONFIRMATION_EMAILS: process.env.SEND_CONFIRMATION_EMAILS === "true",
 }
 
-// Validation function
+/**
+ * Validates that all required environment variables are set.
+ * @returns {{valid: boolean, missing: string[]}} - An object indicating whether the environment is valid and a list of any missing variables.
+ */
 export function validateEnvironment(): { valid: boolean; missing: string[] } {
   const required = ["ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REFRESH_TOKEN", "JWT_SECRET"]
 

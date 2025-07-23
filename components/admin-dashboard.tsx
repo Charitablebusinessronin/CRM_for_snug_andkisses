@@ -8,6 +8,11 @@ import { Progress } from "@/components/ui/progress"
 import { Users, Calendar, DollarSign, TrendingUp, Clock, AlertCircle, CheckCircle, UserPlus } from "lucide-react"
 import { ZohoSetupGuide } from "./admin/zoho-setup-guide"
 
+/**
+ * The main component for the admin dashboard.
+ * It displays key performance indicators (KPIs), alerts, recent activity, and other administrative information.
+ * @returns {JSX.Element} The admin dashboard component.
+ */
 export function AdminDashboard() {
   return (
     <div className="space-y-6">

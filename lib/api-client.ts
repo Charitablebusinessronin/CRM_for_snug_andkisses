@@ -1,4 +1,7 @@
-// API client for backend communication
+/**
+ * API client for backend communication.
+ * This class provides methods for making requests to the backend API.
+ */
 class ApiClient {
   private baseUrl: string
   private headers: HeadersInit
@@ -10,6 +13,13 @@ class ApiClient {
     }
   }
 
+  /**
+   * Makes a request to the backend API.
+   * @param {string} endpoint - The API endpoint to request.
+   * @param {RequestInit} options - The options for the request.
+   * @returns {Promise<T>} - A promise that resolves with the response from the API.
+   * @private
+   */
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}/api${endpoint}`
 

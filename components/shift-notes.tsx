@@ -10,6 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Clock, Upload, CheckCircle } from "lucide-react"
 
+/**
+ * The main component for managing shift notes.
+ * It allows contractors to submit new shift notes and view their previous notes.
+ * @returns {JSX.Element} The shift notes component.
+ */
 export function ShiftNotes() {
   const [shiftNotes] = useState([
     {

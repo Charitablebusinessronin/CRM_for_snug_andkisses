@@ -10,6 +10,11 @@ import { JobBoard } from "./job-board"
 import { ShiftNotes } from "./shift-notes"
 import { ContractorProfile } from "./contractor-profile"
 
+/**
+ * The main component for the contractor portal.
+ * It displays information about the contractor's jobs, shifts, and profile.
+ * @returns {JSX.Element} The contractor portal component.
+ */
 export function ContractorPortal() {
   const [activeJobs] = useState([
     {

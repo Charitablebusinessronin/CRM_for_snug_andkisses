@@ -7,6 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Calendar, FileText, MessageSquare, User, Users } from "lucide-react"
 
+/**
+ * The main component for the employee portal.
+ * It displays information about the employee's schedule, clients, and notes.
+ * @returns {JSX.Element} The employee portal component.
+ */
 export function EmployeePortal() {
   return (
     <div className="space-y-6">

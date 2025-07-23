@@ -8,6 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Clock, MapPin, Heart, Baby } from "lucide-react"
 
+/**
+ * The main component for the job board.
+ * It displays a list of available jobs and allows contractors to filter and apply for them.
+ * @returns {JSX.Element} The job board component.
+ */
 export function JobBoard() {
   const [jobs] = useState([
     {

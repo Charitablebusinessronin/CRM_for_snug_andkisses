@@ -9,6 +9,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MapPin, Phone, Mail, Star, Upload, FileText, CheckCircle, AlertCircle } from "lucide-react"
 
+/**
+ * The main component for the contractor profile.
+ * It displays and allows editing of the contractor's profile information, onboarding status, and documents.
+ * @returns {JSX.Element} The contractor profile component.
+ */
 export function ContractorProfile() {
   return (
     <div className="space-y-6">

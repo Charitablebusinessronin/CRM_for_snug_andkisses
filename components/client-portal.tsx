@@ -8,6 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Calendar, Clock, DollarSign, Heart, MessageSquare, Star, User, Baby, Shield } from "lucide-react"
 
+/**
+ * The main component for the client portal.
+ * It displays information about the client's services, appointments, and doulas.
+ * @returns {JSX.Element} The client portal component.
+ */
 export function ClientPortal() {
   const [clientStage] = useState("active") // prospect, intake, active, paused
 
