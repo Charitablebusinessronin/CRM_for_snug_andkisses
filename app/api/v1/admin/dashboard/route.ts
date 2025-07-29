@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { zohoCRM } from "@/lib/zoho-crm-enhanced"
-import { getAuditTrail, generateComplianceReport } from "@/lib/hipaa-audit"
-import { logAuditEvent } from "@/lib/hipaa-audit"
+import { getAuditTrail, generateComplianceReport, logAuditEvent } from "@/lib/hipaa-audit-edge"
 
 export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID()

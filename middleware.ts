@@ -1,8 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { logAuditEvent } from "@/lib/hipaa-audit"
+import { logAuditEvent } from "@/lib/hipaa-audit-edge"
+import { authMiddleware } from "@/lib/auth-middleware"
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next()
+  // First apply authentication middleware
+  const authResponse = await authMiddleware(request)
+  if (authResponse && authResponse.status !== 200) {
+    return authResponse
+  }
+
+  const response = authResponse || NextResponse.next()
 
   // CORS Configuration for cross-origin requests
   const allowedOrigins = [

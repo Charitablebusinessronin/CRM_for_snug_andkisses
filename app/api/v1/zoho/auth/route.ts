@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { logAuditEvent } from "@/lib/hipaa-audit"
+import { logAuditEvent } from "@/lib/hipaa-audit-edge"
 
 // Helper to get Zoho refresh token
 export async function GET(request: NextRequest) {

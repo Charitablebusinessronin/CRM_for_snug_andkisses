@@ -19,11 +19,26 @@ export function ZohoSync() {
 
   const handleSync = async () => {
     setIssyncing(true)
-    // Simulate sync process
-    setTimeout(() => {
-      setIssyncing(false)
-      setLastSync(new Date().toLocaleString())
-    }, 3000)
+    try {
+      // Test connections to all Zoho services
+      const [crmTest, booksTest, campaignsTest] = await Promise.all([
+        fetch('/api/zoho/crm?action=test-connection').then(r => r.json()),
+        fetch('/api/zoho/books?action=test-connection').then(r => r.json()),
+        fetch('/api/zoho/campaigns?action=test-connection').then(r => r.json())
+      ]);
+
+      console.log('Connection test results:', { crmTest, booksTest, campaignsTest });
+      setLastSync(new Date().toLocaleString());
+      
+      // You can update syncStatus here based on real results
+      // setSyncStatus({ ... real data from API responses ... });
+      
+    } catch (error) {
+      console.error('Sync failed:', error);
+      alert('Sync failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIssyncing(false);
+    }
   }
 
   return (
@@ -140,49 +155,134 @@ export function ZohoSync() {
         </Alert>
       )}
 
-      {/* Integration Settings */}
+      {/* Zoho Service Configuration */}
       <Card className="border-[#3B2352]/20">
         <CardHeader>
-          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Integration Settings</CardTitle>
-          <CardDescription>Configure how data syncs between systems</CardDescription>
+          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Zoho Service Configuration</CardTitle>
+          <CardDescription>Configure and test individual Zoho service connections</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Sync Frequency</label>
-              <select className="w-full p-2 border border-[#D7C7ED]/50 rounded-md">
-                <option>Every 15 minutes</option>
-                <option>Every hour</option>
-                <option>Every 4 hours</option>
-                <option>Daily</option>
-              </select>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button 
+              onClick={() => window.open('/api/zoho/crm?action=dashboard', '_blank')}
+              className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Configure Zoho CRM
+            </Button>
+            
+            <Button 
+              onClick={() => window.open('/api/zoho/books?action=dashboard', '_blank')}
+              className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white flex items-center gap-2"
+            >
+              <DollarSign className="h-4 w-4" />
+              Configure Zoho Books
+            </Button>
+            
+            <Button 
+              onClick={() => window.open('/api/zoho/campaigns?action=dashboard', '_blank')}
+              className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Configure Zoho Campaigns
+            </Button>
+          </div>
+
+          <div className="mt-6">
+            <h4 className="font-medium mb-3">Test Connections</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/zoho/crm?action=test-connection');
+                    const result = await response.json();
+                    alert(`Zoho CRM: ${result.connection_status?.message || 'Connection test completed'}`);
+                  } catch (error) {
+                    alert('CRM test failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Test CRM Connection
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/zoho/books?action=test-connection');
+                    const result = await response.json();
+                    alert(`Zoho Books: ${result.connection_status?.message || 'Connection test completed'}`);
+                  } catch (error) {
+                    alert('Books test failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <DollarSign className="h-4 w-4" />
+                Test Books Connection
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/zoho/campaigns?action=test-connection');
+                    const result = await response.json();
+                    alert(`Zoho Campaigns: ${result.connection_status?.message || 'Connection test completed'}`);
+                  } catch (error) {
+                    alert('Campaigns test failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                Test Campaigns Connection
+              </Button>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Conflict Resolution</label>
-              <select className="w-full p-2 border border-[#D7C7ED]/50 rounded-md">
-                <option>Zoho wins</option>
-                <option>CRM wins</option>
-                <option>Most recent wins</option>
-                <option>Manual review</option>
-              </select>
+          </div>
+
+          <div className="mt-6 pt-6 border-t">
+            <h4 className="font-medium mb-3">Sync Settings</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Sync Frequency</label>
+                <select className="w-full p-2 border border-[#D7C7ED]/50 rounded-md">
+                  <option>Every 15 minutes</option>
+                  <option>Every hour</option>
+                  <option>Every 4 hours</option>
+                  <option>Daily</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Conflict Resolution</label>
+                <select className="w-full p-2 border border-[#D7C7ED]/50 rounded-md">
+                  <option>Zoho wins</option>
+                  <option>CRM wins</option>
+                  <option>Most recent wins</option>
+                  <option>Manual review</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="auto-sync" defaultChecked />
-            <label htmlFor="auto-sync" className="text-sm">
-              Enable automatic sync
-            </label>
-          </div>
+            <div className="flex items-center space-x-2 mt-4">
+              <input type="checkbox" id="auto-sync" defaultChecked />
+              <label htmlFor="auto-sync" className="text-sm">
+                Enable automatic sync
+              </label>
+            </div>
 
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="sync-notifications" defaultChecked />
-            <label htmlFor="sync-notifications" className="text-sm">
-              Send sync notifications
-            </label>
-          </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="sync-notifications" defaultChecked />
+              <label htmlFor="sync-notifications" className="text-sm">
+                Send sync notifications
+              </label>
+            </div>
 
-          <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">Save Settings</Button>
+            <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white mt-4">Save Settings</Button>
+          </div>
         </CardContent>
       </Card>
     </div>

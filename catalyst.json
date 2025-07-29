@@ -1,0 +1,341 @@
+{
+  "project": {
+    "name": "snug-kisses-business-suite",
+    "description": "Zoho One-like business suite for Snug & Kisses",
+    "version": "1.0.0",
+    "type": "fullstack",
+    "framework": "nextjs"
+  },
+  "services": {
+    "datastore": {
+      "enabled": true,
+      "tables": [
+        {
+          "name": "customers",
+          "description": "Customer relationship management"
+        },
+        {
+          "name": "deals",
+          "description": "Sales pipeline and deals"
+        },
+        {
+          "name": "support_tickets",
+          "description": "Customer support ticketing system"
+        },
+        {
+          "name": "invoices",
+          "description": "Financial invoicing system"
+        },
+        {
+          "name": "invoice_line_items",
+          "description": "Invoice line items"
+        },
+        {
+          "name": "payments",
+          "description": "Payment tracking"
+        },
+        {
+          "name": "employees",
+          "description": "HR employee management"
+        },
+        {
+          "name": "time_entries",
+          "description": "Employee time tracking"
+        },
+        {
+          "name": "leave_requests",
+          "description": "Employee leave management"
+        },
+        {
+          "name": "campaigns",
+          "description": "Marketing campaigns"
+        },
+        {
+          "name": "campaign_logs",
+          "description": "Email campaign tracking"
+        },
+        {
+          "name": "customer_segments",
+          "description": "Customer segmentation"
+        },
+        {
+          "name": "activities",
+          "description": "Customer activity tracking"
+        },
+        {
+          "name": "ticket_comments",
+          "description": "Support ticket comments"
+        },
+        {
+          "name": "support_agents",
+          "description": "Support team members"
+        },
+        {
+          "name": "expenses",
+          "description": "Business expense tracking"
+        },
+        {
+          "name": "hr_logs",
+          "description": "HR activity logs"
+        },
+        {
+          "name": "onboarding_checklists",
+          "description": "Employee onboarding tasks"
+        }
+      ]
+    },
+    "functions": {
+      "enabled": true,
+      "functions": [
+        {
+          "name": "crm-functions",
+          "description": "Customer relationship management functions",
+          "path": "functions/business-suite/crm-functions.js",
+          "type": "basic-io",
+          "memory": 512,
+          "timeout": 30
+        },
+        {
+          "name": "marketing-functions",
+          "description": "Marketing automation functions",
+          "path": "functions/business-suite/marketing-functions.js",
+          "type": "basic-io",
+          "memory": 512,
+          "timeout": 60
+        },
+        {
+          "name": "support-functions",
+          "description": "Customer support functions",
+          "path": "functions/business-suite/support-functions.js",
+          "type": "basic-io",
+          "memory": 512,
+          "timeout": 30
+        },
+        {
+          "name": "finance-functions",
+          "description": "Finance and accounting functions",
+          "path": "functions/business-suite/finance-functions.js",
+          "type": "basic-io",
+          "memory": 512,
+          "timeout": 30
+        },
+        {
+          "name": "hr-functions",
+          "description": "Human resources functions",
+          "path": "functions/business-suite/hr-functions.js",
+          "type": "basic-io",
+          "memory": 512,
+          "timeout": 30
+        }
+      ]
+    },
+    "mail": {
+      "enabled": true,
+      "templates": [
+        {
+          "name": "welcome-customer",
+          "subject": "Welcome to Snug & Kisses",
+          "description": "Welcome email for new customers"
+        },
+        {
+          "name": "invoice-notification",
+          "subject": "Invoice from Snug & Kisses",
+          "description": "Invoice delivery email"
+        },
+        {
+          "name": "support-ticket-created",
+          "subject": "Support Ticket Created",
+          "description": "Support ticket confirmation"
+        },
+        {
+          "name": "leave-request-notification",
+          "subject": "Leave Request Notification",
+          "description": "HR leave request notification"
+        }
+      ]
+    },
+    "filestore": {
+      "enabled": true,
+      "folders": [
+        {
+          "name": "employee-documents",
+          "description": "Employee HR documents"
+        },
+        {
+          "name": "invoice-attachments",
+          "description": "Invoice and receipt attachments"
+        },
+        {
+          "name": "support-attachments",
+          "description": "Support ticket attachments"
+        },
+        {
+          "name": "marketing-assets",
+          "description": "Marketing campaign assets"
+        }
+      ]
+    },
+    "cache": {
+      "enabled": true,
+      "segments": [
+        {
+          "name": "customer-cache",
+          "description": "Customer data caching"
+        },
+        {
+          "name": "dashboard-metrics",
+          "description": "Dashboard metrics caching"
+        },
+        {
+          "name": "session-cache",
+          "description": "User session data"
+        }
+      ]
+    },
+    "authentication": {
+      "enabled": true,
+      "providers": ["zoho", "email"],
+      "roles": [
+        {
+          "name": "admin",
+          "description": "System administrator",
+          "permissions": ["all"]
+        },
+        {
+          "name": "manager",
+          "description": "Department manager",
+          "permissions": ["crm", "support", "hr", "finance"]
+        },
+        {
+          "name": "employee",
+          "description": "Regular employee",
+          "permissions": ["crm", "support"]
+        },
+        {
+          "name": "customer",
+          "description": "Customer portal access",
+          "permissions": ["support"]
+        }
+      ]
+    },
+    "search": {
+      "enabled": true,
+      "indices": [
+        {
+          "name": "customer-search",
+          "table": "customers",
+          "fields": ["name", "email", "company"]
+        },
+        {
+          "name": "ticket-search",
+          "table": "support_tickets",
+          "fields": ["title", "description", "ticket_number"]
+        },
+        {
+          "name": "employee-search",
+          "table": "employees",
+          "fields": ["name", "email", "employee_id", "department"]
+        }
+      ]
+    },
+    "cron": {
+      "enabled": true,
+      "jobs": [
+        {
+          "name": "invoice-reminder",
+          "schedule": "0 9 * * *",
+          "description": "Daily invoice payment reminders",
+          "function": "finance-functions",
+          "action": "sendInvoiceReminders"
+        },
+        {
+          "name": "ticket-escalation",
+          "schedule": "0 */2 * * *",
+          "description": "Check and escalate overdue tickets",
+          "function": "support-functions",
+          "action": "escalateOverdueTickets"
+        },
+        {
+          "name": "lead-scoring-update",
+          "schedule": "0 1 * * *",
+          "description": "Update lead scores based on activity",
+          "function": "marketing-functions",
+          "action": "updateLeadScores"
+        }
+      ]
+    },
+    "analytics": {
+      "enabled": true,
+      "dashboards": [
+        {
+          "name": "business-overview",
+          "description": "Main business metrics dashboard"
+        },
+        {
+          "name": "sales-pipeline",
+          "description": "Sales and CRM analytics"
+        },
+        {
+          "name": "support-metrics",
+          "description": "Customer support performance"
+        },
+        {
+          "name": "hr-analytics",
+          "description": "Human resources metrics"
+        },
+        {
+          "name": "financial-reports",
+          "description": "Financial performance reports"
+        }
+      ]
+    }
+  },
+  "integrations": {
+    "zoho_crm": {
+      "enabled": false,
+      "description": "Sync with existing Zoho CRM data"
+    },
+    "zoho_books": {
+      "enabled": false,
+      "description": "Sync with Zoho Books for accounting"
+    },
+    "payment_gateways": {
+      "stripe": {
+        "enabled": false,
+        "description": "Stripe payment processing"
+      },
+      "paypal": {
+        "enabled": false,
+        "description": "PayPal payment processing"
+      }
+    }
+  },
+  "deployment": {
+    "environments": ["development", "production"],
+    "domain": {
+      "development": "dev-business.snugandkisses.com",
+      "production": "business.snugandkisses.com"
+    },
+    "ssl": {
+      "enabled": true,
+      "auto_renew": true
+    }
+  },
+  "monitoring": {
+    "alerts": {
+      "enabled": true,
+      "email": "admin@snugandkisses.com"
+    },
+    "logs": {
+      "level": "info",
+      "retention_days": 30
+    },
+    "performance": {
+      "enabled": true,
+      "thresholds": {
+        "response_time": 3000,
+        "error_rate": 0.01
+      }
+    }
+  }
+}

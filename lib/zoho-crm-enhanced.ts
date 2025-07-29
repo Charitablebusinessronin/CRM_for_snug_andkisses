@@ -3,7 +3,7 @@
  * It provides methods for creating, updating, and retrieving contacts and cases,
  * as well as handling authentication and error logging.
  */
-import { logAuditEvent } from "./hipaa-audit"
+import { logAuditEvent } from "./hipaa-audit-edge"
 
 interface ZohoConfig {
   clientId: string

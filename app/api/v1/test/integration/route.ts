@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { zohoCRM } from "@/lib/zoho-crm-enhanced"
-import { logAuditEvent, verifyAuditIntegrity } from "@/lib/hipaa-audit"
+import { logAuditEvent, verifyAuditIntegrity } from "@/lib/hipaa-audit-edge"
 import { validateEnvironment } from "@/lib/env-config"
 
 export async function GET(request: NextRequest) {

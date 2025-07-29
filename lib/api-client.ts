@@ -1,122 +1,221 @@
 /**
- * API client for backend communication.
- * This class provides methods for making requests to the backend API.
+ * API Client for Snug & Kisses CRM
+ * Centralized API calls with authentication and error handling
  */
+
+import { logAuditEvent } from './hipaa-audit'
+
+export interface ApiResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: 'admin' | 'employee' | 'contractor'
+  avatar?: string
+  phone?: string
+}
+
+export interface Client {
+  id: string
+  name: string
+  email: string
+  phone: string
+  status: 'active' | 'inactive' | 'pending'
+  assignedEmployee?: string
+  dueDate?: string
+  serviceType?: string
+}
+
+export interface Shift {
+  id: string
+  clientId: string
+  clientName: string
+  date: string
+  startTime: string
+  endTime: string
+  status: 'scheduled' | 'completed' | 'cancelled'
+  notes?: string
+  employeeId: string
+}
+
+export interface Job {
+  id: string
+  type: string
+  client: string
+  date: string
+  time: string
+  location: string
+  rate: string
+  status: 'pending' | 'confirmed' | 'completed'
+  contractorId?: string
+}
+
 class ApiClient {
   private baseUrl: string
-  private headers: HeadersInit
+  private token: string | null
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000"
-    this.headers = {
-      "Content-Type": "application/json",
-    }
+    this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5369'
+    this.token = null
   }
 
-  /**
-   * Makes a request to the backend API.
-   * @param {string} endpoint - The API endpoint to request.
-   * @param {RequestInit} options - The options for the request.
-   * @returns {Promise<T>} - A promise that resolves with the response from the API.
-   * @private
-   */
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}/api${endpoint}`
-
-    const config: RequestInit = {
-      headers: this.headers,
-      ...options,
-    }
-
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(url, config)
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      const url = `${this.baseUrl}/api${endpoint}`
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...options.headers
       }
 
-      return await response.json()
+      // Add auth token if available
+      const token = this.getToken()
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        headers
+      })
+
+      const data = await response.json()
+
+      // Log HIPAA audit events for sensitive operations
+      if (endpoint.includes('/clients') || endpoint.includes('/shifts')) {
+        await logAuditEvent({
+          action: 'API_ACCESS',
+          resource: endpoint,
+          method: options.method || 'GET',
+          details: { status: response.status }
+        })
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'API request failed')
+      }
+
+      return {
+        success: true,
+        data: data.data || data
+      }
     } catch (error) {
-      console.error("API Request failed:", error)
-      throw error
+      console.error('API request failed:', error)
+      
+      await logAuditEvent({
+        action: 'API_ERROR',
+        resource: endpoint,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      })
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'An error occurred'
+      }
     }
   }
 
-  // Contractor API methods
-  async getContractors() {
-    return this.request("/contractors")
+  private getToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token')
+    }
+    return null
   }
 
-  async getContractor(id: string) {
-    return this.request(`/contractors/${id}`)
-  }
-
-  async updateContractor(id: string, data: any) {
-    return this.request(`/contractors/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
+  // Authentication
+  async login(email: string, password: string, role: string): Promise<ApiResponse<{ user: User; token: string }>> {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, role })
     })
   }
 
-  // Client API methods
-  async getClients() {
-    return this.request("/clients")
+  async logout(): Promise<ApiResponse<void>> {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+      localStorage.removeItem('userRole')
+    }
+    return { success: true }
   }
 
-  async getClient(id: string) {
+  // User management
+  async getCurrentUser(): Promise<ApiResponse<User>> {
+    return this.request('/auth/me')
+  }
+
+  // Client management
+  async getClients(): Promise<ApiResponse<Client[]>> {
+    return this.request('/clients')
+  }
+
+  async getClient(id: string): Promise<ApiResponse<Client>> {
     return this.request(`/clients/${id}`)
   }
 
-  async createClient(data: any) {
-    return this.request("/clients", {
-      method: "POST",
-      body: JSON.stringify(data),
+  // Shift management
+  async getShifts(): Promise<ApiResponse<Shift[]>> {
+    return this.request('/shifts')
+  }
+
+  async getShift(id: string): Promise<ApiResponse<Shift>> {
+    return this.request(`/shifts/${id}`)
+  }
+
+  async createShift(shift: Partial<Shift>): Promise<ApiResponse<Shift>> {
+    return this.request('/shifts', {
+      method: 'POST',
+      body: JSON.stringify(shift)
     })
   }
 
-  // Shift Notes API methods
-  async getShiftNotes(contractorId?: string) {
-    const query = contractorId ? `?contractor_id=${contractorId}` : ""
-    return this.request(`/shift-notes${query}`)
-  }
-
-  async createShiftNote(data: any) {
-    return this.request("/shift-notes", {
-      method: "POST",
-      body: JSON.stringify(data),
+  async updateShift(id: string, shift: Partial<Shift>): Promise<ApiResponse<Shift>> {
+    return this.request(`/shifts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(shift)
     })
   }
 
-  async updateShiftNote(id: string, data: any) {
-    return this.request(`/shift-notes/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    })
+  // Job management
+  async getJobs(): Promise<ApiResponse<Job[]>> {
+    return this.request('/jobs')
   }
 
-  // Job Board API methods
-  async getJobs() {
-    return this.request("/jobs")
+  async getJob(id: string): Promise<ApiResponse<Job>> {
+    return this.request(`/jobs/${id}`)
   }
 
-  async applyToJob(jobId: string, contractorId: string) {
+  async applyJob(jobId: string): Promise<ApiResponse<Job>> {
     return this.request(`/jobs/${jobId}/apply`, {
-      method: "POST",
-      body: JSON.stringify({ contractor_id: contractorId }),
+      method: 'POST'
     })
   }
 
-  // Scheduling API methods
-  async getSchedule(userId: string, userType: "contractor" | "client") {
-    return this.request(`/schedule?user_id=${userId}&user_type=${userType}`)
+  // Profile management
+  async updateProfile(data: Partial<User>): Promise<ApiResponse<User>> {
+    return this.request('/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
   }
 
-  async createAppointment(data: any) {
-    return this.request("/appointments", {
-      method: "POST",
-      body: JSON.stringify(data),
-    })
+  // Dashboard data
+  async getDashboardData(role: string): Promise<ApiResponse<any>> {
+    return this.request(`/dashboard/${role}`)
   }
 }
 
 export const apiClient = new ApiClient()
+
+// React hook for API calls
+export function useApi() {
+  return apiClient
+}

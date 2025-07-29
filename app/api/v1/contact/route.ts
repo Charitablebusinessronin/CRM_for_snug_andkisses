@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { zohoCRM } from "@/lib/zoho-crm-enhanced"
-import { logAuditEvent } from "@/lib/hipaa-audit"
+import { logAuditEvent } from "@/lib/hipaa-audit-edge"
 
 // Zod validation schema for contact form data
 const contactSchema = z.object({

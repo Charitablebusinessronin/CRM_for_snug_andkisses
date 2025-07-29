@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { zohoCRM } from "@/lib/zoho-crm-enhanced"
-import { logAuditEvent } from "@/lib/hipaa-audit"
+import { logAuditEvent } from "@/lib/hipaa-audit-edge"
 
 const serviceRequestSchema = z.object({
   employeeId: z.string().min(1, "Employee ID is required"),

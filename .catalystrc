@@ -1,0 +1,29 @@
+{
+  "defaults": {
+    "project": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "48697000000023005",
+      "name": "SnugCrm",
+      "domain": {
+        "id": "10101924738",
+        "name": "snugcrm-891124823.development"
+      },
+      "timezone": "America/New_York",
+      "env": [
+        {
+          "idx": 1,
+          "id": "10102161895",
+          "name": "Production",
+          "type": 1
+        }
+      ]
+    }
+  ]
+}

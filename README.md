@@ -1,22 +1,45 @@
-# Snugs and Kisses CRM System
+# 🏥 Snug & Kisses CRM System
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.2.4-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![Zoho CRM](https://img.shields.io/badge/Zoho-CRM_Integration-green)](https://www.zoho.com/crm/)
 [![HIPAA](https://img.shields.io/badge/HIPAA-Compliant-red)](https://www.hhs.gov/hipaa/index.html)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![Status](https://img.shields.io/badge/Status-In_Development-yellow)]()
 
-A modern, HIPAA-compliant customer relationship management system built with Next.js and integrated with Zoho One for enterprise-grade data management and security.
+**A comprehensive, HIPAA-compliant CRM system for postpartum care services, built with Next.js 15.2.4 and integrated with Zoho One for enterprise-grade data management.**
 
-## Features
+## 🚨 CURRENT STATUS: IMPLEMENTATION IN PROGRESS
 
-- **Employee Portal** - Comprehensive onboarding with form validation
-- **Service Management** - Request tracking for Postpartum, Birth Doula, and Childcare services
-- **Video Integration** - Welcome videos with React-Player
-- **HIPAA Compliance** - Complete audit logging and secure data storage
-- **Zoho Integration** - Direct CRM integration with REST API
-- **Role-Based Auth** - Protected routes with authentication context
+**Last Updated:** 2025-07-29  
+**Environment:** Docker Development (Port 5369)  
+**Compilation Status:** ✅ All compilation issues resolved  
+**Deployment Status:** 🔄 Ready for full implementation
+
+## 🎯 System Overview
+
+### ✅ IMPLEMENTED FEATURES
+- **Admin Dashboard** - Unified business suite interface (Zoho One-like)
+- **Docker Environment** - Complete development setup with hot reload
+- **UI Components** - Employee and contractor portal interfaces
+- **HIPAA Framework** - Audit logging and compliance infrastructure
+- **API Structure** - RESTful endpoints with TypeScript
 - **Modern UI** - shadcn/ui components with Tailwind CSS
+
+### 🔄 IN DEVELOPMENT
+- **Employee Portal** - Client management, scheduling, shift notes
+- **Contractor Portal** - Job board, availability, earnings tracking
+- **Authentication** - Role-based access control with JWT
+- **Zoho Integration** - Real-time CRM data synchronization
+- **Database Operations** - Zoho Catalyst serverless functions
+
+### 📋 CORE MODULES
+1. **Admin Dashboard** - Complete business overview and management
+2. **Employee Portal** - Staff scheduling, client assignments, documentation
+3. **Contractor Portal** - Job applications, shift management, profile
+4. **Service Management** - Postpartum, Birth Doula, and Childcare tracking
+5. **HIPAA Compliance** - Complete audit trails and secure data handling
 
 ## Tech Stack
 
@@ -29,44 +52,75 @@ A modern, HIPAA-compliant customer relationship management system built with Nex
 - **Video:** React-Player with multi-format support
 - **Notifications:** Sonner toast notifications
 
-## Prerequisites
+## 🚀 Quick Start Guide
 
-- Node.js 18+ and npm/yarn/pnpm
-- Zoho One account with CRM access
-- OAuth credentials for Zoho integration
-
-## Quick Start
-
-1. **Clone the repository**
 ### Prerequisites
-- Node.js 18+
-- pnpm
-- Zoho Developer Account
-- Zoho One Subscription
+- **Docker Desktop** - For development environment
+- **Node.js 18+** - For local development
+- **pnpm** - Package manager
+- **Zoho Developer Account** - For CRM integration
+- **Zoho One Subscription** - For production deployment
 
-### Local Development
+### 🐋 Docker Development (Recommended)
 
-1. Clone the repository
+1. **Navigate to project directory**
    ```bash
-   git clone https://github.com/Charitablebusinessronin/CRM-for-snug-and-kisses-.git
-   cd CRM-for-snug-and-kisses-
+   cd "C:\Users\sabir\.windsurf\Winsurf programs\01_EndlessOdyssey\Freelance\Snug and Kisses\CRM_for_snug_andkisses"
    ```
 
-2. Install dependencies
+2. **Start Docker environment**
+   ```bash
+   # Windows
+   docker-setup.bat
+   
+   # Linux/Mac
+   chmod +x docker-setup.sh && ./docker-setup.sh
+   ```
+
+3. **Access the application**
+   - **Main App:** http://localhost:5369
+   - **Admin Dashboard:** http://localhost:5369/admin/dashboard
+   - **Health Check:** http://localhost:5369/api/health
+
+### 💻 Local Development (Alternative)
+
+1. **Install dependencies**
    ```bash
    pnpm install
    ```
 
-3. Set up environment variables
+2. **Configure environment**
    ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your credentials
+   cp .env.local.example .env.local
+   # Edit .env.local with your Zoho credentials
    ```
 
-4. Start the development server
+3. **Start development server**
    ```bash
-   pnpm dev -p 0  # Uses a random available port
+   pnpm dev -p 0  # Uses random port (never port 3000)
    ```
+
+## 🔧 Implementation Status
+
+### ✅ Completed Components
+- **Admin Dashboard** (`/admin/dashboard`) - Fully functional unified interface
+- **Docker Environment** - Development setup with hot reload on port 5369
+- **UI Components** - Employee and contractor portal interfaces designed
+- **API Structure** - RESTful endpoints with TypeScript definitions
+- **HIPAA Framework** - Audit logging and compliance infrastructure
+
+### 🚧 In Progress (See IMPLEMENTATION_PLAN.md)
+- **Authentication System** - JWT-based role access control
+- **Employee Portal Routes** - `/employee/*` pages and functionality
+- **Contractor Portal Routes** - `/contractor/*` pages and functionality
+- **API Integration** - Connecting UI components to backend endpoints
+- **Zoho CRM Sync** - Real-time data synchronization
+
+### 📋 Next Steps
+1. **Complete app routing** for employee/contractor portals
+2. **Implement authentication middleware** with role-based access
+3. **Connect API endpoints** to existing UI components
+4. **Deploy Zoho Catalyst functions** for production backend
 
 ## 📂 Project Structure
 
