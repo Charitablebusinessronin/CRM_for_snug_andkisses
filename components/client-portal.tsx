@@ -4,314 +4,305 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { Calendar, Clock, DollarSign, Heart, MessageSquare, Star, User, Baby, Shield } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
-import { DoulaList } from "./doula-list"
-import { AppointmentScheduler } from "./appointment-scheduler"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { CalendarIcon, DollarSign, Users, Activity, Mail, Phone, MapPin } from "lucide-react"
 
-interface DashboardData {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  totalHours: number;
-  usedHours: number;
+// Define a type for your client data
+interface Client {
+  name: string
+  status: string
+  lastContact: string
+  nextVisit: string
 }
 
 export function ClientPortal() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Changed to named export
+  const [activeTab, setActiveTab] = useState("dashboard")
+  const [clients, setClients] = useState<Client[]>([])
+  const [loadingClients, setLoadingClients] = useState(true)
+  const [clientError, setClientError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchClients() {
       try {
-        setIsLoading(true);
-        const response = await fetch('/api/v1/client-dashboard');
-        const result = await response.json();
-
+        setLoadingClients(true)
+        setClientError(null)
+        // Fetch data from your Next.js API route, which in turn calls Zoho Catalyst
+        const response = await fetch("/api/catalyst/clients")
         if (!response.ok) {
-          throw new Error(result.message || 'Failed to fetch dashboard data.');
+          const errorData = await response.json()
+          throw new Error(errorData.message || "Failed to fetch clients from Catalyst backend.")
         }
-
-        setData(result.data);
-        toast.success(result.message);
+        const data: Client[] = await response.json()
+        setClients(data)
       } catch (error: any) {
-        toast.error(error.message);
+        setClientError(error.message)
+        console.error("Error fetching clients:", error)
       } finally {
-        setIsLoading(false);
+        setLoadingClients(false)
       }
-    };
+    }
 
-    fetchData();
-  }, []);
-
-  const hoursRemaining = data ? data.totalHours - data.usedHours : 0;
-  const sessionsUsed = data ? Math.floor(data.usedHours / 4) : 0; // Assuming 4 hours per session
-  const progressValue = data && data.totalHours > 0 ? (data.usedHours / data.totalHours) * 100 : 0;
-
-  if (isLoading) {
-    return <Skeleton className="w-full h-[500px]" />;
-  }
-
-  if (!data) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Error</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Could not load client data. Please try again later.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+    fetchClients()
+  }, [])
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <Card className="border-[#3B2352]/20 bg-gradient-to-r from-[#3B2352] to-[#3B2352]/90 text-white">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
-            <Heart className="h-6 w-6 text-[#D4AF37]" />
-            Welcome, {data.firstName}!
-          </CardTitle>
-          <CardDescription className="text-white/80" style={{ fontFamily: "Lato, sans-serif" }}>
-            Your next appointment is tomorrow at 10:00 AM with Jessica
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      {/* Service Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-[#D7C7ED]/50">
-          <CardContent className="p-4 text-center">
-            <Clock className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">{hoursRemaining}</div>
-            <div className="text-sm text-gray-600">Hours Remaining</div>
-          </CardContent>
-        </Card>
-        <Card className="border-[#D7C7ED]/50">
-          <CardContent className="p-4 text-center">
-            <Calendar className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">{sessionsUsed}</div>
-            <div className="text-sm text-gray-600">Sessions Used</div>
-          </CardContent>
-        </Card>
-        <Card className="border-[#D7C7ED]/50">
-          <CardContent className="p-4 text-center">
-            <Star className="h-8 w-8 text-[#D4AF37] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">4.9</div>
-            <div className="text-sm text-gray-600">Avg Rating</div>
-          </CardContent>
-        </Card>
-        <Card className="border-[#D7C7ED]/50">
-          <CardContent className="p-4 text-center">
-            <MessageSquare className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">2</div>
-            <div className="text-sm text-gray-600">New Messages</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-[#D7C7ED]/20">
-          <TabsTrigger value="dashboard" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="doulas" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
-            My Doulas
-          </TabsTrigger>
-          <TabsTrigger value="schedule" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
-            Schedule
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
-            Billing
-          </TabsTrigger>
-          <TabsTrigger value="support" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
-            Support
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="dashboard" className="space-y-6">
-          {/* Current Doula */}
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Your Assigned Doula</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src="/placeholder.svg?height=64&width=64" />
-                  <AvatarFallback className="bg-[#D7C7ED] text-[#3B2352]">JD</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-[#3B2352]">Jessica Davis</h3>
-                  <p className="text-gray-600">Certified Postpartum Doula</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Star className="h-4 w-4 text-[#D4AF37] fill-current" />
-                    <span className="text-sm">4.9/5 (23 reviews)</span>
+    <div className="flex min-h-screen w-full flex-col bg-background">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-primary px-4 md:px-6">
+        <h1 className="text-xl font-semibold text-primary-foreground">Client Portal</h1>
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-primary text-primary-foreground">
+              <TabsTrigger
+                value="dashboard"
+                className="data-[state=active]:bg-primary-foreground data-[state=active]:text-primary"
+              >
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger
+                value="requests"
+                className="data-[state=active]:bg-primary-foreground data-[state=active]:text-primary"
+              >
+                Requests
+              </TabsTrigger>
+              <TabsTrigger
+                value="billing"
+                className="data-[state=active]:bg-primary-foreground data-[state=active]:text-primary"
+              >
+                Billing
+              </TabsTrigger>
+              <TabsTrigger
+                value="support"
+                className="data-[state=active]:bg-primary-foreground data-[state=active]:text-primary"
+              >
+                Support
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </nav>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsContent value="dashboard">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Hours Purchased</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">120</div>
+                  <p className="text-xs text-muted-foreground">+20 from last month</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Hours Used</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">85</div>
+                  <p className="text-xs text-muted-foreground">+15 from last month</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Remaining Balance</CardTitle>
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">35</div>
+                  <p className="text-xs text-muted-foreground">Hours remaining</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Assigned Doula</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">Sarah Johnson</div>
+                  <p className="text-xs text-muted-foreground">Next visit: July 25th</p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Client Info Sheet</CardTitle>
+                  <CardDescription>Your personal and service details.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" defaultValue="Sarah Mitchell" readOnly />
                   </div>
-                </div>
-                <div className="text-right">
-                  <Button variant="outline" className="border-[#3B2352] text-[#3B2352] mb-2">
-                    Message
+                  <div className="grid grid-cols-2 gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" defaultValue="sarah.m@example.com" readOnly />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" defaultValue="(555) 123-4567" readOnly />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input id="address" defaultValue="123 Main St, Anytown, USA" readOnly />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Doula/Sitter Request Forms</CardTitle>
+                  <CardDescription>Submit new requests or view past ones.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                  <Button className="w-full">New Doula Request</Button>
+                  <Button className="w-full bg-transparent" variant="outline">
+                    New Sitter Request
                   </Button>
-                  <div className="text-sm text-gray-600">Next visit: Tomorrow 10 AM</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  <Button className="w-full" variant="secondary">
+                    View Past Requests
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle>Fetched Clients from Zoho Catalyst</CardTitle>
+                <CardDescription>
+                  {loadingClients ? (
+                    "Loading clients from Zoho Catalyst backend..."
+                  ) : clientError ? (
+                    <span className="text-red-500">
+                      Error: {clientError} Please ensure your Zoho Catalyst API is running and accessible.
+                    </span>
+                  ) : (
+                    "This data is fetched from your Zoho Catalyst backend via a Next.js API route."
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {clients.length > 0 && !loadingClients && !clientError ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Last Contact</TableHead>
+                        <TableHead>Next Visit</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {clients.map((client, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{client.name}</TableCell>
+                          <TableCell>{client.status}</TableCell>
+                          <TableCell>{client.lastContact}</TableCell>
+                          <TableCell>{client.nextVisit}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  !loadingClients && !clientError && <p>No clients found in Zoho Catalyst or data is empty.</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          {/* Service Progress */}
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Service Progress</CardTitle>
-              <CardDescription>Your postpartum care journey</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Hours Used</span>
-                  <span>{data.usedHours} of {data.totalHours} hours</span>
-                </div>
-                <Progress value={progressValue} className="h-2" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="text-center p-4 bg-[#D7C7ED]/10 rounded-lg">
-                  <Baby className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-                  <div className="font-semibold">Newborn Care</div>
-                  <div className="text-sm text-gray-600">8 sessions</div>
-                </div>
-                <div className="text-center p-4 bg-[#D7C7ED]/10 rounded-lg">
-                  <Heart className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-                  <div className="font-semibold">Emotional Support</div>
-                  <div className="text-sm text-gray-600">Ongoing</div>
-                </div>
-                <div className="text-center p-4 bg-[#D7C7ED]/10 rounded-lg">
-                  <Shield className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-                  <div className="font-semibold">Family Guidance</div>
-                  <div className="text-sm text-gray-600">Weekly check-ins</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  {
-                    date: "2024-01-10",
-                    activity: "Session completed with Jessica",
-                    duration: "4 hours",
-                    notes: "Great progress with feeding routine",
-                  },
-                  {
-                    date: "2024-01-08",
-                    activity: "Check-in call",
-                    duration: "30 minutes",
-                    notes: "Discussed sleep schedule adjustments",
-                  },
-                  {
-                    date: "2024-01-05",
-                    activity: "Session completed with Jessica",
-                    duration: "6 hours",
-                    notes: "Overnight support, baby slept well",
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-4 p-3 border border-[#D7C7ED]/50 rounded-lg">
-                    <div className="w-2 h-2 bg-[#3B2352] rounded-full mt-2" />
-                    <div className="flex-1">
-                      <div className="font-medium">{item.activity}</div>
-                      <div className="text-sm text-gray-600">
-                        {item.date} • {item.duration}
-                      </div>
-                      <div className="text-sm text-gray-700 mt-1">{item.notes}</div>
+          <TabsContent value="requests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Service Requests</CardTitle>
+                <CardDescription>Manage your doula and sitter requests.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div className="flex items-center justify-between rounded-md border p-4">
+                    <div>
+                      <h3 className="font-semibold">Postpartum Doula Request</h3>
+                      <p className="text-sm text-muted-foreground">Status: Pending Interview</p>
                     </div>
+                    <Button variant="outline">View Details</Button>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  <div className="flex items-center justify-between rounded-md border p-4">
+                    <div>
+                      <h3 className="font-semibold">Night Nanny Sitter Request</h3>
+                      <p className="text-sm text-muted-foreground">Status: Matched with Jessica D.</p>
+                    </div>
+                    <Button variant="outline">View Details</Button>
+                  </div>
+                  <Button className="w-full mt-4">Submit New Request</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="doulas">
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Available Doulas</CardTitle>
-              <CardDescription>Browse and select your preferred doula</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DoulaList />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="billing">
+            <Card>
+              <CardHeader>
+                <CardTitle>Billing & Usage Dashboard</CardTitle>
+                <CardDescription>Track your purchased hours and invoices.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div className="flex items-center justify-between rounded-md border p-4">
+                    <div>
+                      <h3 className="font-semibold">Invoice #2023-001</h3>
+                      <p className="text-sm text-muted-foreground">Amount: $1,200 | Status: Paid</p>
+                    </div>
+                    <Button variant="outline">View Invoice</Button>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border p-4">
+                    <div>
+                      <h3 className="font-semibold">Invoice #2023-002</h3>
+                      <p className="text-sm text-muted-foreground">Amount: $800 | Status: Due</p>
+                    </div>
+                    <Button variant="default">Pay Now</Button>
+                  </div>
+                  <Button className="w-full mt-4">Purchase More Hours</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="schedule">
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Schedule Management</CardTitle>
-              <CardDescription>View and manage your appointments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="h-12 w-12 mx-auto mb-4 text-[#D7C7ED]" />
-                <p>Calendar scheduling interface would be integrated here</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="billing">
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Billing & Payments</CardTitle>
-              <CardDescription>Manage your service hours and payments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <DollarSign className="h-12 w-12 mx-auto mb-4 text-[#D7C7ED]" />
-                <p>Billing and payment interface would be implemented here</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="support">
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Support & Resources</CardTitle>
-              <CardDescription>Get help and access resources</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Button className="w-full justify-start bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Contact Support Team
-                </Button>
-                <Button variant="outline" className="w-full justify-start border-[#3B2352] text-[#3B2352]">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Support Call
-                </Button>
-                <Button variant="outline" className="w-full justify-start border-[#3B2352] text-[#3B2352]">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Access Resource Library
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="support">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Support</CardTitle>
+                <CardDescription>Get assistance with your services.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="flex items-center gap-4">
+                  <Mail className="h-6 w-6 text-primary" />
+                  <div>
+                    <h3 className="font-semibold">Email Support</h3>
+                    <p className="text-sm text-muted-foreground">support@snugandkisses.com</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Phone className="h-6 w-6 text-primary" />
+                  <div>
+                    <h3 className="font-semibold">Phone Support</h3>
+                    <p className="text-sm text-muted-foreground">(800) 555-1234</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <MapPin className="h-6 w-6 text-primary" />
+                  <div>
+                    <h3 className="font-semibold">Office Address</h3>
+                    <p className="text-sm text-muted-foreground">456 Comfort Lane, Suite 100, Serenity City</p>
+                  </div>
+                </div>
+                <Button className="w-full mt-4">Submit a Support Ticket</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   )
 }

@@ -1,190 +1,149 @@
 "use client"
 
+import { TabsContent } from "@/components/ui/tabs"
+
+import { TabsTrigger } from "@/components/ui/tabs"
+
+import { TabsList } from "@/components/ui/tabs"
+
+import { Tabs } from "@/components/ui/tabs"
+
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, Upload, CheckCircle } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-export function ShiftNotes() {
-  const [shiftNotes] = useState([
+export default function ShiftNotes() {
+  const [activeTab, setActiveTab] = useState("submit")
+
+  const submittedNotes = [
     {
       id: 1,
-      client: "Sarah M.",
-      date: "2024-01-10",
-      startTime: "9:00 AM",
-      endTime: "5:00 PM",
-      hours: 8,
-      type: "Postpartum",
-      status: "submitted",
-      notes:
-        "Baby had a good day with regular feeding schedule. Mom is recovering well and got some rest. Light housework completed including laundry and meal prep.",
-      activities: ["Newborn care", "Feeding support", "Light housework", "Emotional support"],
+      client: "Sarah Mitchell",
+      date: "2024-07-15",
+      duration: "4 hours",
+      notes: "Baby fed well, good nap schedule. Discussed next steps with parents.",
     },
     {
       id: 2,
-      client: "Maria L.",
-      date: "2024-01-08",
-      startTime: "2:00 PM",
-      endTime: "11:00 PM",
-      hours: 9,
-      type: "Birth Support",
-      status: "approved",
-      notes:
-        "Attended birth at Midtown Hospital. Provided continuous support during 12-hour labor. Baby born healthy at 10:45 PM.",
-      activities: ["Labor support", "Comfort measures", "Advocacy", "Immediate postpartum care"],
+      client: "David Lee",
+      date: "2024-07-12",
+      duration: "6 hours",
+      notes: "Overnight support. Baby slept through the night. Parents got much-needed rest.",
     },
-  ])
+    {
+      id: 3,
+      client: "Emily White",
+      date: "2024-07-10",
+      duration: "3 hours",
+      notes: "Daytime visit. Assisted with light chores and provided emotional support.",
+    },
+  ]
 
   return (
-    <div className="space-y-6">
-      {/* Submit New Shift Note */}
-      <Card className="border-[#3B2352]/20">
-        <CardHeader>
-          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Submit Shift Note</CardTitle>
-          <CardDescription>Record details from your recent shift</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="client">Client</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sarah">Sarah M.</SelectItem>
-                  <SelectItem value="maria">Maria L.</SelectItem>
-                  <SelectItem value="jennifer">Jennifer K.</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="date">Date</Label>
-              <Input type="date" id="date" />
-            </div>
-            <div>
-              <Label htmlFor="hours">Total Hours</Label>
-              <Input type="number" id="hours" placeholder="8" />
-            </div>
-          </div>
+    <div className="flex min-h-screen w-full flex-col bg-background">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-primary px-4 md:px-6">
+        <h1 className="text-xl font-semibold text-primary-foreground">Shift Notes</h1>
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-primary text-primary-foreground">
+              <TabsTrigger
+                value="submit"
+                className="data-[state=active]:bg-primary-foreground data-[state=active]:text-primary"
+              >
+                Submit New Note
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                className="data-[state=active]:bg-primary-foreground data-[state=active]:text-primary"
+              >
+                Notes History
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </nav>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsContent value="submit">
+            <Card>
+              <CardHeader>
+                <CardTitle>Submit New Shift Note</CardTitle>
+                <CardDescription>Record details for a recently completed shift.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="client-name">Client Name</Label>
+                  <Input id="client-name" placeholder="e.g., Sarah Mitchell" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="shift-date">Shift Date</Label>
+                  <Input id="shift-date" type="date" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="shift-duration">Shift Duration (hours)</Label>
+                  <Input id="shift-duration" type="number" placeholder="e.g., 4" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="notes">Shift Notes</Label>
+                  <Textarea id="notes" placeholder="Enter detailed notes about the shift..." rows={5} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="sign-off">Upload Digital Shift Sign-off (PDF/Image)</Label>
+                  <Input id="sign-off" type="file" />
+                </div>
+                <Button className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">Submit Shift Note</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="start-time">Start Time</Label>
-              <Input type="time" id="start-time" />
-            </div>
-            <div>
-              <Label htmlFor="end-time">End Time</Label>
-              <Input type="time" id="end-time" />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="activities">Activities Performed</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-              {[
-                "Newborn care",
-                "Feeding support",
-                "Light housework",
-                "Emotional support",
-                "Meal prep",
-                "Sibling care",
-                "Birth support",
-                "Comfort measures",
-              ].map((activity) => (
-                <label key={activity} className="flex items-center space-x-2 text-sm">
-                  <input type="checkbox" className="rounded border-[#3B2352]" />
-                  <span>{activity}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Detailed Notes</Label>
-            <Textarea
-              id="notes"
-              placeholder="Describe the shift in detail, including any important observations, activities completed, and client feedback..."
-              className="min-h-[120px]"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="signature">Digital Signature Upload</Label>
-            <div className="border-2 border-dashed border-[#D7C7ED] rounded-lg p-6 text-center">
-              <Upload className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Upload signed shift confirmation (PDF or image)</p>
-              <Button variant="outline" className="mt-2 border-[#3B2352] text-[#3B2352]">
-                Choose File
-              </Button>
-            </div>
-          </div>
-
-          <Button className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">Submit Shift Note</Button>
-        </CardContent>
-      </Card>
-
-      {/* Previous Shift Notes */}
-      <Card className="border-[#3B2352]/20">
-        <CardHeader>
-          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Previous Shift Notes</CardTitle>
-          <CardDescription>Your submitted shift records</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {shiftNotes.map((note) => (
-              <Card key={note.id} className="border-[#D7C7ED]/50">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="border-[#D7C7ED] text-[#3B2352]">
-                        {note.type}
-                      </Badge>
-                      <div>
-                        <div className="font-semibold">{note.client}</div>
-                        <div className="text-sm text-gray-600 flex items-center gap-4">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {note.date}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {note.startTime} - {note.endTime} ({note.hours}h)
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={note.status === "approved" ? "default" : "secondary"}
-                      className={note.status === "approved" ? "bg-[#D4AF37] text-white" : ""}
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      {note.status}
-                    </Badge>
+          <TabsContent value="history">
+            <Card>
+              <CardHeader>
+                <CardTitle>Shift Notes History</CardTitle>
+                <CardDescription>Review all your submitted shift notes.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {submittedNotes.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Notes Summary</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {submittedNotes.map((note) => (
+                        <TableRow key={note.id}>
+                          <TableCell className="font-medium">{note.client}</TableCell>
+                          <TableCell>{note.date}</TableCell>
+                          <TableCell>{note.duration}</TableCell>
+                          <TableCell>{note.notes.substring(0, 50)}...</TableCell>
+                          <TableCell>
+                            <Button variant="outline" size="sm">
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No shift notes submitted yet.</p>
                   </div>
-
-                  <p className="text-gray-700 mb-3" style={{ fontFamily: "Lato, sans-serif" }}>
-                    {note.notes}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-                    {note.activities.map((activity, index) => (
-                      <Badge key={index} variant="outline" className="text-xs border-[#D7C7ED] text-[#3B2352]">
-                        {activity}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   )
 }

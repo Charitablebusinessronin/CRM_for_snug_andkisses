@@ -3,204 +3,148 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, MapPin, Heart, Baby } from "lucide-react"
+import { Search, MapPin, Clock, DollarSign } from "lucide-react"
+import { Calendar } from "lucide-react"
 
-export function JobBoard() {
-  const [jobs] = useState([
+export default function JobBoard() {
+  const [filterServiceType, setFilterServiceType] = useState("All Service Types")
+  const [filterLocation, setFilterLocation] = useState("")
+
+  const jobPostings = [
     {
       id: 1,
-      type: "Postpartum",
-      title: "Postpartum Support - New Mom",
-      client: "Anonymous Client",
-      date: "2024-01-20",
-      time: "10:00 AM - 6:00 PM",
-      duration: "8 hours",
-      location: "Downtown Area",
-      distance: "2.3 miles",
-      rate: "$25/hr",
-      total: "$200",
-      description:
-        "Looking for experienced postpartum doula to help with newborn care, light housework, and emotional support.",
-      requirements: ["Newborn care experience", "CPR certified", "References required"],
-      urgent: false,
+      title: "Postpartum Doula - Overnight",
+      serviceType: "Postpartum",
+      client: "New Family",
+      location: "Downtown",
+      date: "2024-07-20",
+      time: "9 PM - 5 AM",
+      pay: "$35/hr",
+      description: "Seeking an experienced postpartum doula for overnight support.",
     },
     {
       id: 2,
-      type: "Birth Support",
-      title: "Birth Doula - First Time Mom",
-      client: "Anonymous Client",
-      date: "2024-01-25",
-      time: "On-call (estimated 12-16 hours)",
-      duration: "Variable",
-      location: "Midtown Hospital",
-      distance: "5.1 miles",
-      rate: "$35/hr",
-      total: "$420-560",
-      description:
-        "First-time mom seeking birth doula for hospital birth. Looking for continuous support during labor.",
-      requirements: ["Birth doula certification", "Hospital experience", "Available on-call"],
-      urgent: true,
+      title: "Sitter - Weekend Day",
+      serviceType: "Sitter",
+      client: "Existing Client",
+      location: "Suburbs",
+      date: "2024-07-22",
+      time: "10 AM - 4 PM",
+      pay: "$25/hr",
+      description: "Reliable sitter needed for two children (ages 3 and 6) on a Saturday.",
     },
     {
       id: 3,
-      type: "Backup Care",
-      title: "Emergency Childcare - 2 Children",
-      client: "Anonymous Client",
-      date: "2024-01-18",
-      time: "7:00 AM - 7:00 PM",
-      duration: "12 hours",
-      location: "Suburban Area",
-      distance: "8.2 miles",
-      rate: "$20/hr",
-      total: "$240",
-      description: "Need backup childcare for 2 children (ages 3 and 6) due to family emergency.",
-      requirements: ["Childcare experience", "Background check", "Own transportation"],
-      urgent: true,
+      title: "Birth Doula - On Call",
+      serviceType: "Birth",
+      client: "First-time Parents",
+      location: "City Center",
+      date: "Aug 2024 (on call)",
+      time: "Flexible",
+      pay: "Flat Rate",
+      description: "Seeking a compassionate birth doula for on-call support.",
     },
-  ])
+    {
+      id: 4,
+      title: "Postpartum Doula - Daytime",
+      serviceType: "Postpartum",
+      client: "Returning Client",
+      location: "North End",
+      date: "2024-07-25",
+      time: "9 AM - 1 PM",
+      pay: "$30/hr",
+      description: "Daytime support for a family with a newborn, focusing on feeding and light household tasks.",
+    },
+  ]
 
-  const getJobIcon = (type: string) => {
-    switch (type) {
-      case "Postpartum":
-        return <Heart className="h-5 w-5" />
-      case "Birth Support":
-        return <Baby className="h-5 w-5" />
-      default:
-        return <Calendar className="h-5 w-5" />
-    }
-  }
-
-  const getJobColor = (type: string) => {
-    switch (type) {
-      case "Postpartum":
-        return "border-[#D7C7ED] text-[#3B2352] bg-[#D7C7ED]/10"
-      case "Birth Support":
-        return "border-[#3B2352] text-[#3B2352] bg-[#3B2352]/10"
-      case "Backup Care":
-        return "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10"
-      default:
-        return "border-gray-300 text-gray-600"
-    }
-  }
+  const filteredJobs = jobPostings.filter((job) => {
+    const matchesService = filterServiceType !== "All Service Types" ? job.serviceType === filterServiceType : true
+    const matchesLocation = filterLocation ? job.location.toLowerCase().includes(filterLocation.toLowerCase()) : true
+    return matchesService && matchesLocation
+  })
 
   return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <Card className="border-[#3B2352]/20">
-        <CardHeader>
-          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Find Jobs</CardTitle>
-          <CardDescription>Filter available opportunities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Service Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="postpartum">Postpartum</SelectItem>
-                <SelectItem value="birth">Birth Support</SelectItem>
-                <SelectItem value="backup">Backup Care</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Date Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input placeholder="Max distance (miles)" type="number" />
-            <Input placeholder="Min rate ($/hr)" type="number" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Job Listings */}
-      <div className="space-y-4">
-        {jobs.map((job) => (
-          <Card key={job.id} className={`border-[#3B2352]/20 ${job.urgent ? "ring-2 ring-[#D4AF37]/50" : ""}`}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Badge className={getJobColor(job.type)}>
-                    {getJobIcon(job.type)}
-                    {job.type}
-                  </Badge>
-                  {job.urgent && (
-                    <Badge variant="destructive" className="bg-[#D4AF37] text-white">
-                      Urgent
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-[#3B2352]">{job.total}</div>
-                  <div className="text-sm text-gray-600">{job.rate}</div>
-                </div>
+    <div className="flex min-h-screen w-full flex-col bg-background">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-primary px-4 md:px-6">
+        <h1 className="text-xl font-semibold text-primary-foreground">Job Board</h1>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Available Job Postings</CardTitle>
+            <CardDescription>Browse and express interest in new shifts.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Select value={filterServiceType} onValueChange={setFilterServiceType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by Service Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Service Types">All Service Types</SelectItem>
+                  <SelectItem value="Postpartum">Postpartum</SelectItem>
+                  <SelectItem value="Sitter">Sitter</SelectItem>
+                  <SelectItem value="Birth">Birth</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Filter by Location"
+                  value={filterLocation}
+                  onChange={(e) => setFilterLocation(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <CardTitle className="text-xl" style={{ fontFamily: "Merriweather, serif" }}>
-                {job.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-700" style={{ fontFamily: "Lato, sans-serif" }}>
-                {job.description}
-              </p>
+              <Button
+                onClick={() => {
+                  setFilterServiceType("All Service Types")
+                  setFilterLocation("")
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4" />
-                    {job.date}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="h-4 w-4" />
-                    {job.time}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4" />
-                    {job.location} ({job.distance})
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-sm font-semibold text-[#3B2352] mb-2">Requirements:</div>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {job.requirements.map((req, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-[#D7C7ED] rounded-full" />
-                        {req}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            {filteredJobs.length > 0 ? (
+              <div className="grid gap-4">
+                {filteredJobs.map((job) => (
+                  <Card key={job.id} className="border-[#D7C7ED]/50">
+                    <CardHeader>
+                      <CardTitle className="text-[#3B2352]">{job.title}</CardTitle>
+                      <CardDescription className="text-gray-600">Client: {job.client}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <MapPin className="h-4 w-4 text-[#3B2352]" /> {job.location}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Calendar className="h-4 w-4 text-[#3B2352]" /> {job.date}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Clock className="h-4 w-4 text-[#3B2352]" /> {job.time}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <DollarSign className="h-4 w-4 text-[#D4AF37]" /> {job.pay}
+                      </div>
+                      <p className="text-sm text-gray-800 mt-2">{job.description}</p>
+                      <Button className="mt-4 w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+                        Express Interest
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  className="flex-1 bg-[#3B2352] hover:bg-[#3B2352]/90 text-white"
-                  style={{ fontFamily: "Nunito Sans, sans-serif" }}
-                >
-                  Express Interest
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
-                >
-                  View Details
-                </Button>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No job postings match your criteria.</p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            )}
+          </CardContent>
+        </Card>
+      </main>
     </div>
   )
 }

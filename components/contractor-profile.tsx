@@ -1,207 +1,190 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MapPin, Phone, Mail, Star, Upload, FileText, CheckCircle, AlertCircle } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Upload, CheckCircle, XCircle, FileText, Video, ImageIcon } from "lucide-react"
 
-export function ContractorProfile() {
+export default function ContractorProfile() {
+  const [onboardingStatus, setOnboardingStatus] = useState("pending-docs") // active, pending-docs, orientation, declined
+
   return (
-    <div className="space-y-6">
-      {/* Profile Header */}
-      <Card className="border-[#3B2352]/20">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src="/placeholder.svg?height=96&width=96" />
-              <AvatarFallback className="bg-[#D7C7ED] text-[#3B2352] text-xl">JD</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-[#3B2352] mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-                Jessica Davis
-              </h2>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <Badge className="bg-[#3B2352] text-white">Certified Doula</Badge>
-                <Badge className="bg-[#D7C7ED] text-[#3B2352]">Postpartum Specialist</Badge>
-                <Badge className="bg-[#D4AF37] text-white">5 Years Experience</Badge>
+    <div className="flex min-h-screen w-full flex-col bg-background">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-primary px-4 md:px-6">
+        <h1 className="text-xl font-semibold text-primary-foreground">My Profile</h1>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Personal Information</CardTitle>
+            <CardDescription>Manage your profile details and contact information.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="full-name">Full Name</Label>
+                <Input id="full-name" defaultValue="Jessica Davis" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Downtown Area, 10 mile radius
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  (555) 123-4567
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  jessica.davis@email.com
-                </div>
-                <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-[#D4AF37]" />
-                  4.9/5 (23 reviews)
-                </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" defaultValue="jessica.d@example.com" type="email" readOnly />
               </div>
             </div>
-            <Button variant="outline" className="border-[#3B2352] text-[#3B2352]">
-              <Upload className="h-4 w-4 mr-2" />
-              Update Photo
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" defaultValue="(555) 987-6543" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" defaultValue="789 Oak Ave, Townsville, USA" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                defaultValue="Experienced postpartum doula passionate about supporting new families and ensuring a smooth transition into parenthood."
+                rows={4}
+              />
+            </div>
+            <Button className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">Save Profile</Button>
+          </CardContent>
+        </Card>
 
-      {/* Onboarding Status */}
-      <Card className="border-[#3B2352]/20">
-        <CardHeader>
-          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Onboarding Status</CardTitle>
-          <CardDescription>Complete all requirements to become active</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { item: "Background Check", status: "completed", required: true },
-              { item: "Contract Signed", status: "completed", required: true },
-              { item: "Orientation Completed", status: "completed", required: true },
-              { item: "Profile Bio", status: "completed", required: true },
-              { item: "Availability Set", status: "completed", required: true },
-              { item: "Insurance Documents", status: "pending", required: true },
-              { item: "Reference Verification", status: "in-progress", required: true },
-            ].map((requirement, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border border-[#D7C7ED]/50 rounded-lg">
+        <Card>
+          <CardHeader>
+            <CardTitle>Professional Details</CardTitle>
+            <CardDescription>Update your role, certifications, and availability.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="role-type">Role Type</Label>
+                <Select defaultValue="postpartum-doula">
+                  <SelectTrigger id="role-type">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="postpartum-doula">Postpartum Doula</SelectItem>
+                    <SelectItem value="sitter">Sitter</SelectItem>
+                    <SelectItem value="birth-doula">Birth Doula</SelectItem>
+                    <SelectItem value="dual">Dual (Doula & Sitter)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="specialties">Specialties</Label>
+                <Input id="specialties" placeholder="e.g., Newborn care, sleep consulting" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="availability">Availability (can be synced to iCal/Google)</Label>
+              <Textarea id="availability" placeholder="e.g., Mon-Fri 9 AM - 5 PM, Weekends by arrangement" rows={3} />
+            </div>
+            <Button className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+              Update Professional Details
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Onboarding & Documents</CardTitle>
+            <CardDescription>Track your onboarding status and upload required documents.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="flex items-center justify-between">
+              <Label>Overall Onboarding Status:</Label>
+              <span className={`font-semibold ${onboardingStatus === "active" ? "text-green-600" : "text-orange-500"}`}>
+                {onboardingStatus === "active" && "Active"}
+                {onboardingStatus === "pending-docs" && "Pending Documents"}
+                {onboardingStatus === "orientation" && "Orientation Required"}
+                {onboardingStatus === "declined" && "Declined"}
+              </span>
+            </div>
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between rounded-md border p-3">
                 <div className="flex items-center gap-3">
-                  {requirement.status === "completed" ? (
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span>Resume</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input id="resume-upload" type="file" className="max-w-[150px]" />
+                  <Button size="sm" variant="outline">
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  {onboardingStatus === "active" ? (
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : requirement.status === "in-progress" ? (
-                    <AlertCircle className="h-5 w-5 text-[#D4AF37]" />
                   ) : (
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                  )}
-                  <span className="font-medium">{requirement.item}</span>
-                  {requirement.required && (
-                    <Badge variant="outline" className="text-xs">
-                      Required
-                    </Badge>
+                    <XCircle className="h-5 w-5 text-red-500" />
                   )}
                 </div>
-                <Badge
-                  variant={requirement.status === "completed" ? "default" : "secondary"}
-                  className={
-                    requirement.status === "completed"
-                      ? "bg-green-500"
-                      : requirement.status === "in-progress"
-                        ? "bg-[#D4AF37]"
-                        : "bg-red-500"
-                  }
-                >
-                  {requirement.status}
-                </Badge>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Profile Information */}
-      <Card className="border-[#3B2352]/20">
-        <CardHeader>
-          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Profile Information</CardTitle>
-          <CardDescription>Update your professional information</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="first-name">First Name</Label>
-              <Input id="first-name" defaultValue="Jessica" />
-            </div>
-            <div>
-              <Label htmlFor="last-name">Last Name</Label>
-              <Input id="last-name" defaultValue="Davis" />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="bio">Professional Bio</Label>
-            <Textarea
-              id="bio"
-              defaultValue="I am a certified postpartum doula with 5 years of experience supporting families during their transition to parenthood. I specialize in newborn care, breastfeeding support, and helping families establish healthy routines."
-              className="min-h-[100px]"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="certifications">Certifications</Label>
-              <Input id="certifications" defaultValue="DONA International, CPR/First Aid" />
-            </div>
-            <div>
-              <Label htmlFor="experience">Years of Experience</Label>
-              <Input id="experience" defaultValue="5" type="number" />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="specialties">Specialties</Label>
-            <Input id="specialties" defaultValue="Postpartum care, Newborn care, Breastfeeding support" />
-          </div>
-
-          <div>
-            <Label htmlFor="availability">Service Areas</Label>
-            <Input id="availability" defaultValue="Downtown, Midtown, Suburban areas within 10 miles" />
-          </div>
-
-          <Button className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">Update Profile</Button>
-        </CardContent>
-      </Card>
-
-      {/* Documents */}
-      <Card className="border-[#3B2352]/20">
-        <CardHeader>
-          <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Documents</CardTitle>
-          <CardDescription>Manage your uploaded documents</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { name: "Resume.pdf", type: "Resume", uploaded: "2024-01-01", status: "approved" },
-              { name: "Certification.pdf", type: "Certification", uploaded: "2024-01-01", status: "approved" },
-              { name: "Contract_Signed.pdf", type: "Contract", uploaded: "2024-01-05", status: "approved" },
-              { name: "Insurance.pdf", type: "Insurance", uploaded: "2024-01-10", status: "pending" },
-            ].map((doc, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border border-[#D7C7ED]/50 rounded-lg">
+              <div className="flex items-center justify-between rounded-md border p-3">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-[#3B2352]" />
-                  <div>
-                    <div className="font-medium">{doc.name}</div>
-                    <div className="text-sm text-gray-600">
-                      {doc.type} • Uploaded {doc.uploaded}
-                    </div>
-                  </div>
+                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                  <span>Headshot</span>
                 </div>
-                <Badge
-                  variant={doc.status === "approved" ? "default" : "secondary"}
-                  className={doc.status === "approved" ? "bg-green-500" : "bg-[#D4AF37]"}
-                >
-                  {doc.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Input id="headshot-upload" type="file" className="max-w-[150px]" />
+                  <Button size="sm" variant="outline">
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  {onboardingStatus === "active" ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-4 p-4 border-2 border-dashed border-[#D7C7ED] rounded-lg text-center">
-            <Upload className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-2">Upload additional documents</p>
-            <Button variant="outline" className="border-[#3B2352] text-[#3B2352]">
-              Choose Files
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center gap-3">
+                  <Video className="h-5 w-5 text-muted-foreground" />
+                  <span>Intro Video</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input id="video-upload" type="file" className="max-w-[150px]" />
+                  <Button size="sm" variant="outline">
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  {onboardingStatus === "active" ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span>Contract/NDA</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input id="contract-upload" type="file" className="max-w-[150px]" />
+                  <Button size="sm" variant="outline">
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  {onboardingStatus === "active" ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <Label>Contract Expiration:</Label>
+              <span className="font-semibold text-muted-foreground">2025-12-31</span>
+            </div>
+            <Button className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">Update Documents</Button>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   )
 }

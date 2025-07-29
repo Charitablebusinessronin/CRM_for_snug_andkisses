@@ -4,269 +4,174 @@ import type React from "react"
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Heart, Lock, User, Shield, Baby, Users } from "lucide-react"
+import { Loader2, User, Briefcase, Home, Baby } from "lucide-react"
 
 interface LoginPortalProps {
-  onLogin: (username: string, role: "admin" | "contractor" | "client" | "employee", name: string) => void
+  onLogin: (userType: string) => void
 }
 
 export function LoginPortal({ onLogin }: LoginPortalProps) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [selectedRole, setSelectedRole] = useState<"admin" | "contractor" | "client" | "employee">("admin")
+  const [role, setRole] = useState("admin") // Default to admin
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Dummy credentials for demo purposes
-  const credentials = {
-    admin: { username: "admin", password: "admin", name: "Sabir (Owner)" },
-    contractor: { username: "contractor", password: "contractor", name: "Jessica Davis" },
-    client: { username: "client", password: "client", name: "Sarah Mitchell" },
-    employee: { username: "employee", password: "employee", name: "Maria Rodriguez" },
-  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setLoading(true)
     setError("")
 
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      const cred = credentials[selectedRole]
-
-      // Trim whitespace and compare credentials
-      if (username.trim().toLowerCase() === cred.username && password.trim() === cred.password) {
-        // Successful login
-        onLogin(username.trim(), selectedRole, cred.name)
-      } else {
-        // Failed login
-        setError(`Invalid credentials for ${selectedRole}. Please check your username and password.`)
-      }
-    } catch (err) {
-      setError("An error occurred during login. Please try again.")
-    } finally {
-      setIsLoading(false)
+    const validCredentials: { [key: string]: { username: string; password: string } } = {
+      admin: { username: "admin", password: "admin" },
+      contractor: { username: "contractor", password: "contractor" },
+      client: { username: "client", password: "client" },
+      employee: { username: "employee", password: "employee" },
     }
+
+    if (
+      validCredentials[role] &&
+      username === validCredentials[role].username &&
+      password === validCredentials[role].password
+    ) {
+      onLogin(role)
+    } else {
+      setError("Invalid username or password for the selected role.")
+    }
+    setLoading(false)
   }
 
-  const quickLogin = (role: "admin" | "contractor" | "client" | "employee") => {
-    const cred = credentials[role]
-    setUsername(cred.username)
-    setPassword(cred.password)
-    setSelectedRole(role)
-    setError("") // Clear any existing errors
-  }
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case "admin":
-        return <Shield className="h-5 w-5" />
-      case "contractor":
-        return <Heart className="h-5 w-5" />
-      case "client":
-        return <Baby className="h-5 w-5" />
-      case "employee":
-        return <Users className="h-5 w-5" />
-      default:
-        return <User className="h-5 w-5" />
+  const quickLogin = (userType: string) => {
+    const credentials = {
+      admin: { username: "admin", password: "admin" },
+      contractor: { username: "contractor", password: "contractor" },
+      client: { username: "client", password: "client" },
+      employee: { username: "employee", password: "employee" },
     }
-  }
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white"
-      case "contractor":
-        return "border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
-      case "client":
-        return "border-[#D7C7ED] text-[#3B2352] hover:bg-[#D7C7ED] hover:text-[#3B2352]"
-      case "employee":
-        return "border-[#3B2352]/70 text-[#3B2352] hover:bg-[#3B2352]/70 hover:text-white"
-      default:
-        return "border-gray-300 text-gray-600"
-    }
+    setUsername(credentials[userType].username)
+    setPassword(credentials[userType].password)
+    setRole(userType)
+    // Automatically attempt login after setting credentials
+    setTimeout(() => onLogin(userType), 100) // Small delay to allow state update
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#D7C7ED]/10 to-white flex items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Heart className="h-8 w-8 text-[#3B2352]" />
-            <h1 className="text-3xl font-bold text-[#3B2352]" style={{ fontFamily: "Merriweather, serif" }}>
-              Snugs & Kisses
-            </h1>
-          </div>
-          <p className="text-lg text-[#3B2352]/70" style={{ fontFamily: "Dancing Script, cursive" }}>
-            Guarding your rest, cherishing your family
-          </p>
-        </div>
-
-        {/* Login Form */}
-        <Card className="border-[#3B2352]/20 shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
-              <Lock className="h-5 w-5 text-[#3B2352]" />
-              Sign In
-            </CardTitle>
-            <CardDescription style={{ fontFamily: "Lato, sans-serif" }}>
-              Access your personalized portal
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="role" style={{ fontFamily: "Lato, sans-serif" }}>
-                  Role
-                </Label>
-                <Select
-                  value={selectedRole}
-                  onValueChange={(value: "admin" | "contractor" | "client" | "employee") => {
-                    setSelectedRole(value)
-                    setError("") // Clear error when role changes
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        Admin/Owner
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="contractor">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4" />
-                        Contractor (Doula/Sitter)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="client">
-                      <div className="flex items-center gap-2">
-                        <Baby className="h-4 w-4" />
-                        Client
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="employee">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        Employee
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="username" style={{ fontFamily: "Lato, sans-serif" }}>
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value)
-                    setError("") // Clear error when typing
-                  }}
-                  placeholder="Enter your username"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="password" style={{ fontFamily: "Lato, sans-serif" }}>
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    setError("") // Clear error when typing
-                  }}
-                  placeholder="Enter your password"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              {error && (
-                <Alert className="border-red-200 bg-red-50">
-                  <AlertDescription className="text-red-700">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white"
-                style={{ fontFamily: "Nunito Sans, sans-serif" }}
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Demo Credentials */}
-        <Card className="border-[#D7C7ED]/50">
-          <CardHeader>
-            <CardTitle className="text-sm" style={{ fontFamily: "Merriweather, serif" }}>
-              Demo Credentials
-            </CardTitle>
-            <CardDescription className="text-xs">Click any button below to auto-fill credentials</CardDescription>
-          </CardHeader>
-          <CardContent>
+    <div className="flex min-h-screen items-center justify-center bg-[#D7C7ED]/10 p-4">
+      <Card className="w-full max-w-md border-[#3B2352]/20 bg-white shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold text-[#3B2352]" style={{ fontFamily: "Merriweather, serif" }}>
+            Snugs and Kisses CRM
+          </CardTitle>
+          <CardDescription className="text-gray-600" style={{ fontFamily: "Lato, sans-serif" }}>
+            Professional doula and childcare services.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="role" className="text-[#3B2352]">
+                Login As
+              </Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger id="role" className="border-[#D7C7ED] text-[#3B2352]">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="admin">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-[#3B2352]" /> Admin (Owner)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="contractor">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-[#3B2352]" /> Contractor (Sitter/Doula)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="client">
+                    <div className="flex items-center gap-2">
+                      <Home className="h-4 w-4 text-[#3B2352]" /> Client
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="employee">
+                    <div className="flex items-center gap-2">
+                      <Baby className="h-4 w-4 text-[#3B2352]" /> Employee (Internal Staff)
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="username" className="text-[#3B2352]">
+                Username
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="border-[#D7C7ED] focus:border-[#3B2352]"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password" className="text-[#3B2352]">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-[#D7C7ED] focus:border-[#3B2352]"
+              />
+            </div>
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Button type="submit" className="w-full bg-[#3B2352] hover:bg-[#3B2352]/90 text-white" disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Login
+            </Button>
+          </form>
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p className="mb-2">Quick Login (for demo):</p>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(credentials).map(([role, cred]) => (
-                <Button
-                  key={role}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => quickLogin(role as "admin" | "contractor" | "client" | "employee")}
-                  className={`flex items-center gap-2 text-xs ${getRoleColor(role)}`}
-                  disabled={isLoading}
-                >
-                  {getRoleIcon(role)}
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
-                </Button>
-              ))}
+              <Button variant="outline" onClick={() => quickLogin("admin")} className="border-[#D7C7ED] text-[#3B2352]">
+                Admin
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => quickLogin("contractor")}
+                className="border-[#D7C7ED] text-[#3B2352]"
+              >
+                Contractor
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => quickLogin("client")}
+                className="border-[#D7C7ED] text-[#3B2352]"
+              >
+                Client
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => quickLogin("employee")}
+                className="border-[#D7C7ED] text-[#3B2352]"
+              >
+                Employee
+              </Button>
             </div>
-            <div className="mt-3 text-xs text-gray-500 space-y-1">
-              <div>
-                <strong>Admin:</strong> admin / admin
-              </div>
-              <div>
-                <strong>Contractor:</strong> contractor / contractor
-              </div>
-              <div>
-                <strong>Client:</strong> client / client
-              </div>
-              <div>
-                <strong>Employee:</strong> employee / employee
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-center text-xs text-gray-500">
-          <p>© 2024 Snugs and Kisses CRM. All rights reserved.</p>
-          <p className="mt-1">Built with care for families and caregivers</p>
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

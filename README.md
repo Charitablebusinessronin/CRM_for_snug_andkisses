@@ -1,90 +1,30 @@
-# Snugs and Kisses CRM System
+# Snugs and Kisses CRM
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.2.4-black)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
-[![Zoho CRM](https://img.shields.io/badge/Zoho-CRM_Integration-green)](https://www.zoho.com/crm/)
-[![HIPAA](https://img.shields.io/badge/HIPAA-Compliant-red)](https://www.hhs.gov/hipaa/index.html)
+*Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
-A modern, HIPAA-compliant customer relationship management system built with Next.js and integrated with Zoho One for enterprise-grade data management and security.
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/charitablebusinessronins-projects/v0-snugs-and-kisses-crm)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/NqeUoUXURgv)
 
-## Features
+## Overview
 
-- **Employee Portal** - Comprehensive onboarding with form validation
-- **Service Management** - Request tracking for Postpartum, Birth Doula, and Childcare services
-- **Video Integration** - Welcome videos with React-Player
-- **HIPAA Compliance** - Complete audit logging and secure data storage
-- **Zoho Integration** - Direct CRM integration with REST API
-- **Role-Based Auth** - Protected routes with authentication context
-- **Modern UI** - shadcn/ui components with Tailwind CSS
+This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
 
-## Tech Stack
+## Deployment
 
-- **Framework:** Next.js 15.2.4 with App Router
-- **Frontend:** React 19, TypeScript, Tailwind CSS
-- **UI Components:** shadcn/ui, Radix UI primitives
-- **Forms:** React Hook Form with Zod validation
-- **Authentication:** Custom context with role-based access
-- **Database:** Zoho CRM (Leads & Cases modules)
-- **Video:** React-Player with multi-format support
-- **Notifications:** Sonner toast notifications
+Your project is live at:
 
-## Prerequisites
+**[https://vercel.com/charitablebusinessronins-projects/v0-snugs-and-kisses-crm](https://vercel.com/charitablebusinessronins-projects/v0-snugs-and-kisses-crm)**
 
-- Node.js 18+ and npm/yarn/pnpm
-- Zoho One account with CRM access
-- OAuth credentials for Zoho integration
+## Build your app
 
-## Quick Start
+Continue building your app on:
 
-1. **Clone the repository**
-### Prerequisites
-- Node.js 18+
-- pnpm
-- Zoho Developer Account
-- Zoho One Subscription
+**[https://v0.dev/chat/projects/NqeUoUXURgv](https://v0.dev/chat/projects/NqeUoUXURgv)**
 
-### Local Development
+## How It Works
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/Charitablebusinessronin/CRM-for-snug-and-kisses-.git
-   cd CRM-for-snug-and-kisses-
-   ```
-
-2. Install dependencies
-   ```bash
-   pnpm install
-   ```
-
-3. Set up environment variables
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your credentials
-   ```
-
-4. Start the development server
-   ```bash
-   pnpm dev -p 0  # Uses a random available port
-   ```
-
-## 📂 Project Structure
-
-```
-.
-├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   ├── (auth)/            # Authentication pages
-│   └── dashboard/         # Main application
-├── components/            # Reusable UI components
-├── lib/                   # Utility functions
-└── public/                # Static assets
-```
-
-## 🔄 Deployment
-
-The application is configured for deployment on Vercel with automatic CI/CD from the main branch.
-
-## 📞 Support
-
-For any questions or issues, please contact the development team.
+1. Create and modify your project using [v0.dev](https://v0.dev)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository
