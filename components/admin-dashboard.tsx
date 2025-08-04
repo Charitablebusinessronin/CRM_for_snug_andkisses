@@ -6,13 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Users, Calendar, DollarSign, TrendingUp, Clock, AlertCircle, CheckCircle, UserPlus } from "lucide-react"
-import { ZohoSetupGuide } from "./admin/zoho-setup-guide"
 
-/**
- * The main component for the admin dashboard.
- * It displays key performance indicators (KPIs), alerts, recent activity, and other administrative information.
- * @returns {JSX.Element} The admin dashboard component.
- */
 export function AdminDashboard() {
   return (
     <div className="space-y-6">
@@ -54,7 +48,7 @@ export function AdminDashboard() {
 
       {/* Main Admin Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-[#D7C7ED]/20">
+        <TabsList className="grid w-full grid-cols-5 bg-[#D7C7ED]/20">
           <TabsTrigger value="overview" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
             Overview
           </TabsTrigger>
@@ -69,9 +63,6 @@ export function AdminDashboard() {
           </TabsTrigger>
           <TabsTrigger value="reports" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
             Reports
-          </TabsTrigger>
-          <TabsTrigger value="zoho-setup" className="data-[state=active]:bg-[#3B2352] data-[state=active]:text-white">
-            Zoho Setup
           </TabsTrigger>
         </TabsList>
 
@@ -104,7 +95,7 @@ export function AdminDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white bg-transparent"
+                      className="border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
                     >
                       {alert.action}
                     </Button>
@@ -243,9 +234,6 @@ export function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-        <TabsContent value="zoho-setup">
-          <ZohoSetupGuide />
         </TabsContent>
       </Tabs>
     </div>

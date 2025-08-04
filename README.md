@@ -1,144 +1,30 @@
-# 🏥 Snug & Kisses CRM System
+# Snugs and Kisses CRM
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.2.4-black)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
-[![Zoho CRM](https://img.shields.io/badge/Zoho-CRM_Integration-green)](https://www.zoho.com/crm/)
-[![HIPAA](https://img.shields.io/badge/HIPAA-Compliant-red)](https://www.hhs.gov/hipaa/index.html)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
-[![Status](https://img.shields.io/badge/Status-In_Development-yellow)]()
+*Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
-**A comprehensive, HIPAA-compliant CRM system for postpartum care services, built with Next.js 15.2.4 and integrated with Zoho One for enterprise-grade data management.**
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/charitablebusinessronins-projects/v0-snugs-and-kisses-crm)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/NqeUoUXURgv)
 
-## 🚨 CURRENT STATUS: IMPLEMENTATION IN PROGRESS
+## Overview
 
-**Last Updated:** 2025-07-29  
-**Environment:** Docker Development (Port 5369)  
-**Compilation Status:** ✅ All compilation issues resolved  
-**Deployment Status:** 🔄 Ready for full implementation
+This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
 
-## 🎯 System Overview
+## Deployment
 
-### ✅ IMPLEMENTED FEATURES
-- **Admin Dashboard** - Unified business suite interface (Zoho One-like)
-- **Docker Environment** - Complete development setup with hot reload
-- **UI Components** - Employee and contractor portal interfaces
-- **HIPAA Framework** - Audit logging and compliance infrastructure
-- **API Structure** - RESTful endpoints with TypeScript
-- **Modern UI** - shadcn/ui components with Tailwind CSS
+Your project is live at:
 
-### 🔄 IN DEVELOPMENT
-- **Employee Portal** - Client management, scheduling, shift notes
-- **Contractor Portal** - Job board, availability, earnings tracking
-- **Authentication** - Role-based access control with JWT
-- **Zoho Integration** - Real-time CRM data synchronization
-- **Database Operations** - Zoho Catalyst serverless functions
+**[https://vercel.com/charitablebusinessronins-projects/v0-snugs-and-kisses-crm](https://vercel.com/charitablebusinessronins-projects/v0-snugs-and-kisses-crm)**
 
-### 📋 CORE MODULES
-1. **Admin Dashboard** - Complete business overview and management
-2. **Employee Portal** - Staff scheduling, client assignments, documentation
-3. **Contractor Portal** - Job applications, shift management, profile
-4. **Service Management** - Postpartum, Birth Doula, and Childcare tracking
-5. **HIPAA Compliance** - Complete audit trails and secure data handling
+## Build your app
 
-## Tech Stack
+Continue building your app on:
 
-- **Framework:** Next.js 15.2.4 with App Router
-- **Frontend:** React 19, TypeScript, Tailwind CSS
-- **UI Components:** shadcn/ui, Radix UI primitives
-- **Forms:** React Hook Form with Zod validation
-- **Authentication:** Custom context with role-based access
-- **Database:** Zoho CRM (Leads & Cases modules)
-- **Video:** React-Player with multi-format support
-- **Notifications:** Sonner toast notifications
+**[https://v0.dev/chat/projects/NqeUoUXURgv](https://v0.dev/chat/projects/NqeUoUXURgv)**
 
-## 🚀 Quick Start Guide
+## How It Works
 
-### Prerequisites
-- **Docker Desktop** - For development environment
-- **Node.js 18+** - For local development
-- **pnpm** - Package manager
-- **Zoho Developer Account** - For CRM integration
-- **Zoho One Subscription** - For production deployment
-
-### 🐋 Docker Development (Recommended)
-
-1. **Navigate to project directory**
-   ```bash
-   cd "C:\Users\sabir\.windsurf\Winsurf programs\01_EndlessOdyssey\Freelance\Snug and Kisses\CRM_for_snug_andkisses"
-   ```
-
-2. **Start Docker environment**
-   ```bash
-   # Windows
-   docker-setup.bat
-   
-   # Linux/Mac
-   chmod +x docker-setup.sh && ./docker-setup.sh
-   ```
-
-3. **Access the application**
-   - **Main App:** http://localhost:5369
-   - **Admin Dashboard:** http://localhost:5369/admin/dashboard
-   - **Health Check:** http://localhost:5369/api/health
-
-### 💻 Local Development (Alternative)
-
-1. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
-
-2. **Configure environment**
-   ```bash
-   cp .env.local.example .env.local
-   # Edit .env.local with your Zoho credentials
-   ```
-
-3. **Start development server**
-   ```bash
-   pnpm dev -p 0  # Uses random port (never port 3000)
-   ```
-
-## 🔧 Implementation Status
-
-### ✅ Completed Components
-- **Admin Dashboard** (`/admin/dashboard`) - Fully functional unified interface
-- **Docker Environment** - Development setup with hot reload on port 5369
-- **UI Components** - Employee and contractor portal interfaces designed
-- **API Structure** - RESTful endpoints with TypeScript definitions
-- **HIPAA Framework** - Audit logging and compliance infrastructure
-
-### 🚧 In Progress (See IMPLEMENTATION_PLAN.md)
-- **Authentication System** - JWT-based role access control
-- **Employee Portal Routes** - `/employee/*` pages and functionality
-- **Contractor Portal Routes** - `/contractor/*` pages and functionality
-- **API Integration** - Connecting UI components to backend endpoints
-- **Zoho CRM Sync** - Real-time data synchronization
-
-### 📋 Next Steps
-1. **Complete app routing** for employee/contractor portals
-2. **Implement authentication middleware** with role-based access
-3. **Connect API endpoints** to existing UI components
-4. **Deploy Zoho Catalyst functions** for production backend
-
-## 📂 Project Structure
-
-```
-.
-├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   ├── (auth)/            # Authentication pages
-│   └── dashboard/         # Main application
-├── components/            # Reusable UI components
-├── lib/                   # Utility functions
-└── public/                # Static assets
-```
-
-## 🔄 Deployment
-
-The application is configured for deployment on Vercel with automatic CI/CD from the main branch.
-
-## 📞 Support
-
-For any questions or issues, please contact the development team.
+1. Create and modify your project using [v0.dev](https://v0.dev)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository
