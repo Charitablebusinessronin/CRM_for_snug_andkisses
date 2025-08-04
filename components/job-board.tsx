@@ -6,14 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Calendar, Clock, MapPin, Heart, Baby, User, Phone, Mail } from "lucide-react"
+import { Calendar, Clock, MapPin, Heart, Baby } from "lucide-react"
 
-/**
- * The main component for the job board.
- * It displays a list of available jobs and allows contractors to filter and apply for them.
- * @returns {JSX.Element} The job board component.
- */
 export function JobBoard() {
   const [jobs] = useState([
     {
@@ -68,9 +62,6 @@ export function JobBoard() {
     },
   ])
 
-  const [selectedJob, setSelectedJob] = useState<any>(null)
-  const [jobModalOpen, setJobModalOpen] = useState(false)
-
   const getJobIcon = (type: string) => {
     switch (type) {
       case "Postpartum":
@@ -93,11 +84,6 @@ export function JobBoard() {
       default:
         return "border-gray-300 text-gray-600"
     }
-  }
-
-  const handleViewJobDetails = (job: any) => {
-    setSelectedJob(job)
-    setJobModalOpen(true)
   }
 
   return (
@@ -207,7 +193,6 @@ export function JobBoard() {
                 <Button
                   variant="outline"
                   className="border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
-                  onClick={() => handleViewJobDetails(job)}
                 >
                   View Details
                 </Button>
@@ -216,111 +201,6 @@ export function JobBoard() {
           </Card>
         ))}
       </div>
-
-      {/* Job Details Modal */}
-      <Dialog open={jobModalOpen} onOpenChange={setJobModalOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedJob && getJobIcon(selectedJob.type)}
-              <span className="text-[#3B2352]">{selectedJob?.title}</span>
-            </DialogTitle>
-            <DialogDescription>
-              Full job details and requirements for {selectedJob?.type} position
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {/* Job Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-[#3B2352]" />
-                      <span className="font-medium">Date:</span>
-                      <span>{selectedJob?.date}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-[#3B2352]" />
-                      <span className="font-medium">Time:</span>
-                      <span>{selectedJob?.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-[#3B2352]" />
-                      <span className="font-medium">Location:</span>
-                      <span>{selectedJob?.location}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="space-y-3">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-[#3B2352]">{selectedJob?.total}</div>
-                      <div className="text-sm text-gray-600">Total Payment</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-green-600">{selectedJob?.rate}</div>
-                      <div className="text-sm text-gray-600">Hourly Rate</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-md font-medium">{selectedJob?.duration}</div>
-                      <div className="text-sm text-gray-600">Duration</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Job Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Job Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700">{selectedJob?.description}</p>
-              </CardContent>
-            </Card>
-
-            {/* Requirements */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Requirements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {selectedJob?.requirements?.map((req: string, index: number) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-[#3B2352] rounded-full"></div>
-                      <span>{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <Button 
-                className="flex-1 bg-[#3B2352] hover:bg-[#3B2352]/90"
-                onClick={() => setJobModalOpen(false)}
-              >
-                Express Interest
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-[#3B2352] text-[#3B2352]"
-                onClick={() => setJobModalOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
