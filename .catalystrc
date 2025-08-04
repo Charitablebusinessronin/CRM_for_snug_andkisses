@@ -9,11 +9,11 @@
   "projects": [
     {
       "idx": 1,
-      "id": "48697000000023005",
-      "name": "SnugCrm",
+      "id": "30300000000011038",
+      "name": "Project-Rainfall",
       "domain": {
-        "id": "10101924738",
-        "name": "snugcrm-891124823.development"
+        "id": "10102161895",
+        "name": "project-rainfall.development"
       },
       "timezone": "America/New_York",
       "env": [

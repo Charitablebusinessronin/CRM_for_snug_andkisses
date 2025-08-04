@@ -7,14 +7,12 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-// Configuration from .env.local
+// Configuration from .catalystrc
 const config = {
   PROJECT_ID: '48697000000023005',
   ENV_ID: '10102161895',
-  CLIENT_ID: '1000.Y94KBC4Q5DBZTE3CVMAHB0X3JYKJRT',
-  CLIENT_SECRET: 'd5944a8eeab15a0be58aef74572d81ca29b1e3d65c',
-  REFRESH_TOKEN: '1000.cdbd8791f1594e2244bb7734ce3f2c1d.019d081864c20f243ea3b63bc67bc27d',
-  BASE_URL: 'https://catalyst.zoho.com/baas/v1'
+  BASE_URL: 'https://catalyst.zoho.com/baas/v1',
+  DOMAIN: 'snugcrm-891124823.development.catalystserverless.com'
 };
 
 class CatalystAPIClient {

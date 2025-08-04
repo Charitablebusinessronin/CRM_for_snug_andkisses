@@ -88,3 +88,39 @@ export async function authMiddleware(request: NextRequest) {
     return response
   }
 }
+
+/**
+ * Verify authentication token for API routes
+ * @param request - NextRequest object
+ * @returns Promise<{valid: boolean, userId?: string, userName?: string, role?: string}>
+ */
+export async function verifyAuthToken(request: NextRequest) {
+  try {
+    // Get token from Authorization header or cookie
+    const authHeader = request.headers.get("Authorization")
+    let token = authHeader?.replace("Bearer ", "")
+    
+    if (!token) {
+      token = request.cookies.get("auth-token")?.value
+    }
+
+    if (!token) {
+      return { valid: false, error: "No token provided" }
+    }
+
+    // Verify JWT token
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    
+    return {
+      valid: true,
+      userId: payload.sub as string,
+      userName: payload.name as string,
+      role: payload.role as string,
+      email: payload.email as string
+    }
+
+  } catch (error) {
+    console.error("Token verification failed:", error)
+    return { valid: false, error: "Invalid token" }
+  }
+}

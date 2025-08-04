@@ -111,6 +111,71 @@
         { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
         { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
       ]
+    },
+    {
+      "table_name": "users",
+      "columns": [
+        { "column_name": "name", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "email", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "password", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "role", "data_type": "varchar", "max_length": 50, "is_mandatory": true },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "active" },
+        { "column_name": "phone", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "employee_id", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "department", "data_type": "varchar", "max_length": 100 },
+        { "column_name": "last_login", "data_type": "datetime" },
+        { "column_name": "password_reset_token", "data_type": "varchar", "max_length": 255 },
+        { "column_name": "password_reset_expires", "data_type": "datetime" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "audit_logs",
+      "columns": [
+        { "column_name": "user_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "action", "data_type": "varchar", "max_length": 100, "is_mandatory": true },
+        { "column_name": "details", "data_type": "text", "is_mandatory": true },
+        { "column_name": "ip_address", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "user_agent", "data_type": "text" },
+        { "column_name": "resource_type", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "resource_id", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "status", "data_type": "varchar", "max_length": 20, "default_value": "success" },
+        { "column_name": "timestamp", "data_type": "datetime", "auto_fill": "created_time" }
+      ]
+    },
+    {
+      "table_name": "client_assignments",
+      "columns": [
+        { "column_name": "employee_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "customer_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "assignment_type", "data_type": "varchar", "max_length": 50, "default_value": "primary" },
+        { "column_name": "start_date", "data_type": "date", "is_mandatory": true },
+        { "column_name": "end_date", "data_type": "date" },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "active" },
+        { "column_name": "notes", "data_type": "text" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "shift_notes",
+      "columns": [
+        { "column_name": "employee_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "customer_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "shift_date", "data_type": "date", "is_mandatory": true },
+        { "column_name": "start_time", "data_type": "time", "is_mandatory": true },
+        { "column_name": "end_time", "data_type": "time", "is_mandatory": true },
+        { "column_name": "notes", "data_type": "text", "is_mandatory": true },
+        { "column_name": "services_provided", "data_type": "text" },
+        { "column_name": "medications_administered", "data_type": "text" },
+        { "column_name": "vital_signs", "data_type": "text" },
+        { "column_name": "client_mood", "data_type": "varchar", "max_length": 100 },
+        { "column_name": "incidents", "data_type": "text" },
+        { "column_name": "supervisor_review", "data_type": "varchar", "max_length": 50, "default_value": "pending" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
     }
   ]
 }

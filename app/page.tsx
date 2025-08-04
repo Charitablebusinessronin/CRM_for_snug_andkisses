@@ -102,19 +102,6 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Admin Dashboard Section */}
-        <div className="mt-16">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-[#3B2352]" style={{ fontFamily: "Merriweather, serif" }}>
-              Business Suite Overview
-            </h3>
-            <p className="text-gray-600">
-              Unified dashboard for complete business management
-            </p>
-          </div>
-          <UnifiedDashboard />
-        </div>
       </div>
     </div>
   )
