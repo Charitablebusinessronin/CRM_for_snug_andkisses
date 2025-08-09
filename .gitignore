@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/.pnp
+.pnp.js
 
 # next.js
 /.next/
@@ -16,8 +18,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (SENSITIVE - Contains API keys and secrets)
 .env*
+!env-vars-template.txt
 
 # vercel
 .vercel
@@ -25,3 +28,77 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# NON-ESSENTIAL FILES - DO NOT UPLOAD TO GITHUB
+/nonessential/
+
+# Development and temporary files
+/logs/
+*.log
+/temp/
+/tmp/
+.cache/
+
+# User uploaded files (HIPAA sensitive data)
+/public/uploads/
+/uploads/
+
+# Build artifacts and cache
+.turbo/
+/test-results/
+/playwright-report/
+/coverage/
+/.nyc_output/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Package manager files
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Docker
+*.tar.gz
+/docker-data/
+
+# Catalyst and Zoho specific
+/.catalyst/
+/catalyst-logs/
+/zoho-logs/
+
+# Sensitive documentation and reports
+SECURITY_SCAN_REPORT.md
+PRIYA_BRAIN_UPDATE.md
+/docs/sensitive/
+
+# Personal development configurations
+/claude/
+MCP_TOOLS_CONFIG.jsonnode_modules/
+# Build outputs
+dist/
+build/
+.next/
+out/
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# IDE files
+# OS files
+desktop.ini
