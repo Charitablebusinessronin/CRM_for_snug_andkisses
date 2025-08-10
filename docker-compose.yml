@@ -1,73 +1,163 @@
-version: '3.8'
+# ============================================================================
+# SNUG & KISSES HEALTHCARE CRM - PRODUCTION DOCKER COMPOSE
+# Full-Stack TypeScript CRM with HIPAA Compliance & Enhanced Security
+# ============================================================================
+version: '3.9'
 
 services:
-  snugs-kisses-crm:
-    build: .
-    container_name: snugs-kisses-crm-dev
+  # ============================================================================
+  # BACKEND SERVICE - Enhanced TypeScript API with Zoho Integration
+  # ============================================================================
+  backend:
+    build:
+      context: ./sabir-crm-typescript
+      dockerfile: Dockerfile
+    container_name: sabir-crm-backend
+    restart: unless-stopped
     ports:
-      - "5369:5369"
+      - "4728:4728"
+    
+    # Environment configuration with HIPAA compliance
+    env_file:
+      - ./sabir-crm-typescript/.env.docker
     environment:
-      - NODE_ENV=development
-      - PORT=5369
-      - NEXTAUTH_URL=http://localhost:5369
-      - NEXTAUTH_SECRET=docker-super-secret-jwt-key-for-development-minimum-32-characters-long-secure
-      - NEXT_PUBLIC_APP_URL=http://localhost:5369
-      - HIPAA_CLOUD_BACKUP=false
-      - SESSION_TIMEOUT=900000
-      - TOKEN_ROTATION_INTERVAL=86400000
+      NODE_ENV: production
+      PORT: 4728
+      HIPAA_AUDIT_LOGGING: "true"
+      
+      # Enhanced Zoho Configuration with fallbacks
+      ZOHO_CRM_CLIENT_ID: ${ZOHO_CRM_CLIENT_ID:-${ZOHO_CLIENT_ID}}
+      ZOHO_CRM_CLIENT_SECRET: ${ZOHO_CRM_CLIENT_SECRET:-${ZOHO_CLIENT_SECRET}}
+      ZOHO_CRM_REFRESH_TOKEN: ${ZOHO_CRM_REFRESH_TOKEN:-${ZOHO_REFRESH_TOKEN}}
+      
+      # Multi-service Zoho Integration
+      ZOHO_BOOKS_CLIENT_ID: ${ZOHO_BOOKS_CLIENT_ID}
+      ZOHO_ANALYTICS_CLIENT_ID: ${ZOHO_ANALYTICS_CLIENT_ID}
+      ZOHO_CAMPAIGNS_CLIENT_ID: ${ZOHO_CAMPAIGNS_CLIENT_ID}
+      ZOHO_DESK_CLIENT_ID: ${ZOHO_DESK_CLIENT_ID}
+      
+      # Production Environment
+      ZOHO_ENVIRONMENT: ${ZOHO_ENVIRONMENT:-production}
+      FRONTEND_URL: http://frontend:5369
+    
+    # HIPAA-compliant volume mounts for audit logging
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-      - audit-logs:/app/logs
+      - backend_logs:/app/logs
+      - backend_uploads:/app/uploads
+      - backend_temp:/app/temp
+    
+    # Enhanced health check with curl support
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4728/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Security enhancements
+    security_opt:
+      - no-new-privileges:true
+    user: "1001:1001"  # Non-root user matching Dockerfile
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Enhanced logging for HIPAA compliance
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=backend,hipaa-compliant=true"
+    
     networks:
       - crm-network
+
+  # ============================================================================
+  # FRONTEND SERVICE - Enhanced Next.js Application
+  # ============================================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: sabir-crm-frontend
     restart: unless-stopped
+    ports:
+      - "5369:5369"  # Updated to match local development port
+    
+    environment:
+      NODE_ENV: production
+      # API endpoints for container communication
+      NEXT_PUBLIC_API_URL: http://localhost:4728/api
+      BACKEND_API_URL: http://backend:4728/api
+      # NextAuth configuration
+      NEXTAUTH_URL: http://localhost:5369
+    
+    # Enhanced health check
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5369/api/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5369/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-
-  # PostgreSQL database for future use
-  postgres:
-    image: postgres:15-alpine
-    container_name: snugs-kisses-db
-    environment:
-      POSTGRES_DB: snugs_kisses_crm
-      POSTGRES_USER: crm_user
-      POSTGRES_PASSWORD: secure_password_2025
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    
+    # Ensure backend is healthy before starting frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    
+    # Security enhancements
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+        labels: "service=frontend"
+    
     networks:
       - crm-network
-    restart: unless-stopped
 
-  # Redis for session storage and caching
-  redis:
-    image: redis:7-alpine
-    container_name: snugs-kisses-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - crm-network
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-
-volumes:
-  postgres-data:
-    driver: local
-  redis-data:
-    driver: local
-  audit-logs:
-    driver: local
-
+# ============================================================================
+# NETWORK CONFIGURATION - Isolated container networking
+# ============================================================================
 networks:
   crm-network:
     driver: bridge
+    name: sabir-crm-network
+
+# ============================================================================
+# PERSISTENT VOLUMES - HIPAA-compliant data storage
+# ============================================================================
+volumes:
+  backend_logs:
+    driver: local
+    name: sabir-crm-logs
+  
+  backend_uploads:
+    driver: local
+    name: sabir-crm-uploads
+  
+  backend_temp:
+    driver: local
+    name: sabir-crm-temp

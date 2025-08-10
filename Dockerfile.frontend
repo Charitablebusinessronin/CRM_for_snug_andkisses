@@ -1,0 +1,140 @@
+# ============================================================================
+# SNUG & KISSES FRONTEND - NEXT.JS PRODUCTION DOCKER BUILD
+# Healthcare CRM Frontend with Enhanced Security and Performance
+# ============================================================================
+
+# Use official Node.js 18 LTS Alpine for consistency and security
+FROM node:18-alpine AS base
+
+# Install system dependencies needed for Next.js, sharp, and curl
+RUN apk add --no-cache \
+    libc6-compat \
+    curl \
+    python3 \
+    make \
+    g++
+
+WORKDIR /app
+
+# ============================================================================
+# DEPENDENCIES STAGE - Install dependencies with dependency fixes
+# ============================================================================
+FROM base AS deps
+
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY package*.json ./
+
+# Install dependencies with legacy peer deps and https-proxy-agent fix
+RUN npm ci --legacy-peer-deps && \
+    npm list https-proxy-agent || npm install https-proxy-agent --legacy-peer-deps && \
+    npm cache clean --force
+
+# ============================================================================
+# BUILD STAGE - Build Next.js application with optimization
+# ============================================================================
+FROM base AS builder
+
+WORKDIR /app
+
+# Disable telemetry during build
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Set production environment variables for build
+ENV NODE_ENV=production
+ENV NEXTAUTH_URL=https://project-rainfall-891140386.development.catalystserverless.com
+ENV REDIRECT_URI=https://project-rainfall-891140386.development.catalystserverless.com/api/auth/callback/zoho
+
+# Zoho OAuth Credentials
+ENV ZOHO_CLIENT_ID=1000.Y94KBC4Q5DBZTE3CVMAHB0X3JYKJRT
+ENV ZOHO_CLIENT_SECRET=9a60ae55c93dcc6a633a3cb6ec594b4f83b293ce41  
+ENV ZOHO_REFRESH_TOKEN=1000.9a60ae55c93dcc6a633a3cb6ec594b4f83b293ce41.healthcare_refresh_token_2025
+
+# Zoho API Endpoints
+ENV ZOHO_CRM_API_URL=https://www.zohoapis.com/crm/v6
+ENV ZOHO_BOOKS_API_URL=https://books.zoho.com/api/v3
+ENV ZOHO_CAMPAIGNS_API_URL=https://campaigns.zoho.com/api/v1.1
+ENV ZOHO_BOOKINGS_API_URL=https://bookings.zoho.com/api/v1
+ENV ZOHO_ANALYTICS_API_URL=https://analyticsapi.zoho.com/api
+ENV ZOHO_SIGN_API_URL=https://sign.zoho.com/api/v1
+
+# Catalyst Configuration  
+ENV CATALYST_FUNCTION_URL=https://project-rainfall-891140386.development.catalystserverless.com/server/quick-actions
+ENV ZIA_FUNCTION_URL=https://project-rainfall-891140386.development.catalystserverless.com/server/zia-intelligence
+ENV NOTIFICATIONS_FUNCTION_URL=https://project-rainfall-891140386.development.catalystserverless.com/server/notification-handler
+ENV ANALYTICS_FUNCTION_URL=https://project-rainfall-891140386.development.catalystserverless.com/server/analytics-engine
+ENV CATALYST_PROJECT_ID=30300000000011038
+ENV CATALYST_ENVIRONMENT=Development
+
+# Docker Configuration
+ENV NEXTJS_PORT=5369
+ENV EXPRESS_PORT=9000
+ENV ALLOWED_ORIGINS=https://app.snugandkisses.com,https://snugandkisses.com,http://localhost:3000,http://localhost:5369
+ENV EXPRESS_BACKEND_URL=http://crm-backend:9000
+
+# Security Keys
+ENV NEXTAUTH_SECRET=snug-kisses-healthcare-crm-secure-key-2025
+ENV DATABASE_URL=placeholder-db-url
+ENV HIPAA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code and configuration
+COPY . .
+
+# Build Next.js application for production
+RUN npm run build
+
+# Verify build completed successfully
+RUN ls -la .next/
+
+# ============================================================================
+# PRODUCTION RUNTIME STAGE - Secure, optimized production image
+# ============================================================================
+FROM base AS runner
+
+WORKDIR /app
+
+# Create non-root user for security (HIPAA compliance)
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Set production environment variables
+ENV NODE_ENV=production
+ENV PORT=5369
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/.next && \
+    chown -R nodejs:nodejs /app
+
+# Copy production dependencies (minimal set)
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+
+# Copy Next.js standalone build output
+COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nodejs:nodejs /app/public ./public
+
+# Switch to non-root user for security
+USER nodejs
+
+# Expose port 5369
+EXPOSE 5369
+
+# Add comprehensive health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:5369/ || exit 1
+
+# Add metadata labels for container management
+LABEL maintainer="Sabir Asheed" \
+      version="1.0.0" \
+      description="Next.js Frontend for Healthcare CRM with HIPAA compliance" \
+      service="frontend" \
+      port="5369" \
+      framework="nextjs"
+
+# Start the Next.js standalone application
+CMD ["node", "server.js"]
