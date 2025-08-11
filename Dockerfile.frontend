@@ -3,8 +3,8 @@
 # Healthcare CRM Frontend with Enhanced Security and Performance
 # ============================================================================
 
-# Use official Node.js 18 LTS Alpine for consistency and security
-FROM node:18-alpine AS base
+# Use official Node.js 20 LTS Alpine for consistency and security
+FROM node:20-alpine AS base
 
 # Install system dependencies needed for Next.js, sharp, and curl
 RUN apk add --no-cache \
@@ -38,12 +38,19 @@ FROM base AS builder
 
 WORKDIR /app
 
+# Accept build arguments
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_CATALYST_CRM_URL
+ARG NEXTAUTH_URL
+
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Set production environment variables for build
 ENV NODE_ENV=production
-ENV NEXTAUTH_URL=https://project-rainfall-891140386.development.catalystserverless.com
+ENV NEXTAUTH_URL=${NEXTAUTH_URL:-https://project-rainfall-891140386.development.catalystserverless.com}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4728/api}
+ENV NEXT_PUBLIC_CATALYST_CRM_URL=${NEXT_PUBLIC_CATALYST_CRM_URL:-https://project-rainfall-891140386.development.catalystserverless.com}
 ENV REDIRECT_URI=https://project-rainfall-891140386.development.catalystserverless.com/api/auth/callback/zoho
 
 # Zoho OAuth Credentials
@@ -69,9 +76,9 @@ ENV CATALYST_ENVIRONMENT=Development
 
 # Docker Configuration
 ENV NEXTJS_PORT=5369
-ENV EXPRESS_PORT=9000
+ENV EXPRESS_PORT=4728
 ENV ALLOWED_ORIGINS=https://app.snugandkisses.com,https://snugandkisses.com,http://localhost:3000,http://localhost:5369
-ENV EXPRESS_BACKEND_URL=http://crm-backend:9000
+ENV SERVER_API_BASE_URL=http://sabir-crm-backend:4728
 
 # Security Keys
 ENV NEXTAUTH_SECRET=snug-kisses-healthcare-crm-secure-key-2025

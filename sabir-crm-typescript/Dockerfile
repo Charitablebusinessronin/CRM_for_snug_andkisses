@@ -3,8 +3,8 @@
 # Healthcare CRM with HIPAA Compliance and Zoho Integration
 # ============================================================================
 
-# Use official Node.js 18 LTS Alpine image for security and size optimization
-FROM node:18-alpine AS base
+# Use official Node.js 20 LTS Alpine image for security and size optimization
+FROM node:20-alpine AS base
 
 # Install system dependencies needed for native modules and Catalyst SDK
 RUN apk add --no-cache \

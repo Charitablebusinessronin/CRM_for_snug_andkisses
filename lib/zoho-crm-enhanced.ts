@@ -80,12 +80,18 @@ class ZohoCRMService {
       })
 
       if (!response.ok) {
-        throw new Error(`Token refresh failed: ${response.statusText}`)
+        const errorBody = await response.json();
+        console.error('Zoho Token Refresh Error:', errorBody);
+        throw new Error(`Token refresh failed: ${response.statusText} - ${JSON.stringify(errorBody)}`);
       }
 
       const data = await response.json()
-      this.accessToken = data.access_token
-      this.tokenExpiry = Date.now() + data.expires_in * 1000 - 60000 // 1 minute buffer
+      if (!data.access_token) {
+        throw new Error('No access token in response')
+      }
+      
+      this.accessToken = data.access_token as string
+      this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000 // 1 minute buffer
 
       await logAuditEvent({
         action: "ZOHO_TOKEN_REFRESH",
@@ -113,28 +119,113 @@ class ZohoCRMService {
     }
   }
 
-  private async makeZohoRequest(endpoint: string, method = "GET", data?: any): Promise<any> {
-    const token = await this.getAccessToken()
-    const url = `${this.config.apiUrl}${endpoint}`
+  // Rate limiting configuration
+  private lastRequestTime = 0
+  private requestQueue: Array<() => Promise<any>> = []
+  private isProcessingQueue = false
+  private static readonly MIN_REQUEST_INTERVAL = 1000 // 1 second between requests
+  private static readonly MAX_RETRIES = 3
+  private static readonly INITIAL_RETRY_DELAY = 1000 // 1 second initial delay
 
-    const requestOptions: RequestInit = {
-      method,
-      headers: {
-        Authorization: `Zoho-oauthtoken ${token}`,
-        "Content-Type": "application/json",
-      },
+  private async processQueue() {
+    if (this.isProcessingQueue || this.requestQueue.length === 0) {
+      return
     }
 
-    if (data && (method === "POST" || method === "PUT")) {
-      requestOptions.body = JSON.stringify(data)
-    }
-
+    this.isProcessingQueue = true
     try {
+      while (this.requestQueue.length > 0) {
+        const now = Date.now()
+        const timeSinceLastRequest = now - this.lastRequestTime
+        
+        // Ensure we respect the rate limit
+        if (timeSinceLastRequest < ZohoCRMService.MIN_REQUEST_INTERVAL) {
+          await new Promise(resolve => 
+            setTimeout(resolve, ZohoCRMService.MIN_REQUEST_INTERVAL - timeSinceLastRequest)
+          )
+        }
+
+        const request = this.requestQueue.shift()
+        if (request) {
+          this.lastRequestTime = Date.now()
+          await request()
+        }
+      }
+    } finally {
+      this.isProcessingQueue = false
+    }
+  }
+
+  private async withRetry<T>(fn: () => Promise<T>, retries = ZohoCRMService.MAX_RETRIES): Promise<T> {
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        return await fn()
+      } catch (error) {
+        lastError = error as Error
+        
+        // If we get rate limited or a server error, wait before retrying
+        const isRateLimitError = error instanceof Error && 
+          (error.message.includes('429') || 
+           error.message.includes('too many requests') ||
+           error.message.includes('rate limit'))
+           
+        const isServerError = error instanceof Error && 
+          error.message.match(/5\d{2}/) !== null
+          
+        if ((isRateLimitError || isServerError) && attempt < retries) {
+          // Exponential backoff: 1s, 2s, 4s, etc.
+          const delay = ZohoCRMService.INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1)
+          console.warn(`Rate limited. Retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+        
+        // If it's not a rate limit error or we've exhausted retries, rethrow
+        if (!isRateLimitError || attempt === retries) {
+          throw error
+        }
+      }
+    }
+    
+    throw lastError || new Error('Unknown error in withRetry')
+  }
+
+  private async makeZohoRequest(endpoint: string, method = "GET", data?: any, attempt = 1): Promise<any> {
+    const executeRequest = async (): Promise<any> => {
+      const token = await this.getAccessToken()
+      const url = `${this.config.apiUrl}${endpoint}`
+
+      const requestOptions: RequestInit = {
+        method,
+        headers: {
+          Authorization: `Zoho-oauthtoken ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+
+      if (data && (method === "POST" || method === "PUT")) {
+        requestOptions.body = JSON.stringify(data)
+      }
+
       const response = await fetch(url, requestOptions)
-      const responseData = await response.json()
+      let responseData
+      
+      try {
+        responseData = await response.json()
+      } catch (e) {
+        // If we can't parse JSON, it's probably an HTML error page
+        const text = await response.text()
+        throw new Error(`Invalid JSON response: ${text.substring(0, 200)}`)
+      }
 
       if (!response.ok) {
-        throw new Error(`Zoho API error: ${responseData.message || response.statusText}`)
+        const errorMessage = responseData?.message || response.statusText
+        const error = new Error(`Zoho API error (${response.status}): ${errorMessage}`)
+        ;(error as any).status = response.status
+        ;(error as any).responseData = responseData
+        throw error
       }
 
       await logAuditEvent({
@@ -151,7 +242,36 @@ class ZohoCRMService {
       })
 
       return responseData
+    }
+
+    try {
+      // Queue the request and process the queue
+      return await new Promise((resolve, reject) => {
+        const wrappedRequest = async () => {
+          try {
+            const result = await this.withRetry(executeRequest)
+            resolve(result)
+          } catch (error) {
+            reject(error)
+          }
+        }
+        
+        this.requestQueue.push(wrappedRequest)
+        this.processQueue()
+      })
     } catch (error) {
+      const errorData: Record<string, any> = { 
+        endpoint, 
+        method, 
+        success: false,
+        attempt,
+      }
+      
+      if (error && typeof error === 'object') {
+        if ('status' in error) errorData.status = (error as any).status
+        if ('responseData' in error) errorData.response_data = (error as any).responseData
+      }
+      
       await logAuditEvent({
         action: "ZOHO_API_REQUEST",
         resource: endpoint,
@@ -163,8 +283,9 @@ class ZohoCRMService {
         timestamp: new Date().toISOString(),
         origin: "server",
         request_id: crypto.randomUUID(),
-        data: { endpoint, method, success: false },
+        data: errorData,
       })
+      
       throw error
     }
   }

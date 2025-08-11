@@ -3,9 +3,8 @@
  * HIPAA-compliant refresh token rotation
  */
 import { NextRequest, NextResponse } from "next/server"
-import { validateAndRotateToken } from "@/lib/token-manager"
+import { secureTokenManager } from "@/lib/secure-token-manager"
 import { logAuditEvent } from "@/lib/hipaa-audit-edge"
-import { headers } from "next/headers"
 
 interface RefreshTokenRequest {
   refreshToken: string
@@ -13,14 +12,18 @@ interface RefreshTokenRequest {
 }
 
 export async function POST(request: NextRequest) {
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown"
+  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
   const userAgent = request.headers.get("user-agent") || "unknown"
   const origin = request.headers.get("origin") || "unknown"
 
   try {
-    const body: RefreshTokenRequest = await request.json()
-    
-    if (!body.refreshToken) {
+    let body: RefreshTokenRequest | null = null
+    try { body = await request.json() } catch { /* ignore */ }
+
+    const cookieToken = request.cookies.get("refresh-token")?.value
+    const incomingToken = body?.refreshToken || cookieToken
+
+    if (!incomingToken) {
       await logAuditEvent({
         action: "TOKEN_REFRESH_FAILED",
         resource: "/api/auth/refresh",
@@ -42,65 +45,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate and potentially rotate the token
-    const result = await validateAndRotateToken(
-      body.refreshToken,
-      ip,
-      userAgent,
-      body.deviceFingerprint
-    )
+    // Rotate token via SecureTokenManager (RS256)
+    const newPair = await secureTokenManager.rotateRefreshToken(incomingToken)
 
-    if (!result.valid) {
+    if (!newPair) {
       return NextResponse.json(
         { 
           error: "Unauthorized", 
-          message: result.error || "Invalid refresh token" 
+          message: "Invalid refresh token" 
         },
         { status: 401 }
       )
     }
 
-    // If token was rotated, return new token pair
-    if (result.newTokenPair) {
-      const response = NextResponse.json({
-        success: true,
-        message: "Token refreshed and rotated",
-        data: {
-          accessToken: result.newTokenPair.accessToken,
-          refreshToken: result.newTokenPair.refreshToken,
-          expiresAt: result.newTokenPair.expiresAt.toISOString(),
-          rotated: true
-        },
-        user: {
-          id: result.userId,
-          role: result.role
-        }
-      })
-
-      // Set secure HTTP-only cookie for refresh token
-      response.cookies.set("refresh-token", result.newTokenPair.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-        path: "/api/auth"
-      })
-
-      return response
-    }
-
-    // Token is valid but no rotation needed
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      message: "Token is still valid",
+      message: "Token refreshed and rotated",
       data: {
-        rotated: false
-      },
-      user: {
-        id: result.userId,
-        role: result.role
+        accessToken: newPair.accessToken,
+        refreshToken: newPair.refreshToken,
+        rotated: true
       }
     })
+
+    // Set secure HTTP-only cookie for refresh token (7d)
+    response.cookies.set("refresh-token", newPair.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/api/auth"
+    })
+
+    // Also refresh access token cookie (15m)
+    response.cookies.set("auth-token", newPair.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60
+    })
+
+    return response
 
   } catch (error) {
     console.error("Token refresh error:", error)

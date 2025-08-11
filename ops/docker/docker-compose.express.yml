@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  catalyst-express:
+    build:
+      context: .
+      dockerfile: ops/docker/Dockerfile.express
+    container_name: catalyst-express-backend
+    ports:
+      - "9000:9000"
+    environment:
+      - NODE_ENV=production
+      - PORT=9000
+      - CATALYST_PROJECT_ID=${CATALYST_PROJECT_ID}
+      - CATALYST_PROJECT_KEY=${CATALYST_PROJECT_KEY}
+      - CATALYST_PROJECT_DOMAIN=${CATALYST_PROJECT_DOMAIN}
+      - CATALYST_ENVIRONMENT=${CATALYST_ENVIRONMENT:-development}
+      - HIPAA_LOGGING_ENABLED=true
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5369}
+    volumes:
+      - hipaa_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  hipaa_logs:

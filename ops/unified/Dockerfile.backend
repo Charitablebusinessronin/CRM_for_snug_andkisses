@@ -1,0 +1,23 @@
+# Unified Backend Dockerfile
+FROM node:20-alpine AS base
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Install curl for healthcheck and tini for proper signal handling
+RUN apk add --no-cache curl tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Install dependencies (prod only)
+COPY package*.json ./
+RUN npm install --omit=dev --legacy-peer-deps
+
+# Copy server entry and express-related sources
+COPY server.js ./
+COPY routes ./routes
+COPY utils ./utils
+# COPY lib ./lib
+# COPY express ./express
+
+EXPOSE 9000
+CMD ["node", "server.js"]

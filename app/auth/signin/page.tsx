@@ -3,6 +3,8 @@
 import { Suspense } from "react"
 import { EnhancedLoginForm } from "@/components/auth/enhanced-login-form"
 import { Loader2 } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export default function SignInPage() {
   return (
@@ -22,7 +24,7 @@ export default function SignInPage() {
           >
             <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
           </svg>
-          Snugs & Kisses CRM
+          Snug & Kisses CRM
         </div>
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
@@ -43,6 +45,29 @@ export default function SignInPage() {
           }>
             <EnhancedLoginForm />
           </Suspense>
+
+          {/* New Client Registration Section (CTA) */}
+          <div className="text-center mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-xl font-semibold text-[#3B2352] mb-3" style={{ fontFamily: "Merriweather, serif" }}>
+              New to Snug & Kisses?
+            </h3>
+            <p className="text-gray-600 mb-5">
+              Join our family of expectant and new parents. Get access to professional doula services,
+              postpartum care, lactation support, and personalized care coordination.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Link href="/register">
+                <Button size="lg" className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#3B2352] font-semibold px-6 py-2.5 w-full sm:w-auto">
+                  Register as New Client
+                </Button>
+              </Link>
+              <Link href="/auth/signin">
+                <Button variant="outline" size="lg" className="border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white px-6 py-2.5 w-full sm:w-auto">
+                  Existing User Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

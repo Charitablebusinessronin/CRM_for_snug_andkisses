@@ -2,11 +2,19 @@
  * Zoho CRM Leads API Endpoint
  * Phase 2: Lead management, interview scheduling, and workflow automation
  * Integrates with Zoho Bookings and Campaigns for complete automation
+ * Refactored to use Catalyst-native integration
  */
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { z } from "zod"
 import { logAuditEvent } from "@/lib/hipaa-audit-edge"
-import { crmLeadManager } from "@/lib/zoho/crm-lead-management"
+import respond from "@/lib/api-respond"
+import { UnifiedApiClient } from "@/lib/unified-api-client"
+import { cookieTokenProvider } from "@/lib/server-token-provider"
+import { getIntegrationMode } from "@/lib/integration-mode"
+import { getCrmEndpoint } from "@/lib/service-endpoints"
+
+// Catalyst Function URL for CRM operations
+const CATALYST_FUNCTION_URL = process.env.CATALYST_FUNCTION_URL || 'https://project-rainfall-891140386.development.catalystserverless.com/server/project_rainfall_function';
 
 // Lead creation schema
 const createLeadSchema = z.object({
@@ -49,7 +57,7 @@ const updateLeadSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID()
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown"
+  const ip = request.headers.get("x-forwarded-for") || "unknown"
   const userAgent = request.headers.get("user-agent") || "unknown"
   const origin = request.headers.get("origin") || "unknown"
 
@@ -59,14 +67,9 @@ export async function POST(request: NextRequest) {
     // Validate lead data
     const validationResult = createLeadSchema.safeParse(body)
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: validationResult.error.errors,
-        },
-        { status: 400 }
-      )
+      return respond.badRequest("Validation failed", "validation_error", {
+        details: validationResult.error.issues,
+      })
     }
 
     const leadData = validationResult.data
@@ -89,8 +92,40 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Create lead in Zoho CRM
-    const leadId = await crmLeadManager.createLead(leadData)
+    // Create lead using UnifiedApiClient
+    const client = new UnifiedApiClient('', cookieTokenProvider(request))
+    const targetUrl = getCrmEndpoint()
+    const catalystRes = await client.request<any>({
+      method: 'POST',
+      url: targetUrl,
+      headers: { 'User-Agent': 'Snug-Kisses-CRM/2.0' },
+      body: {
+        action: 'createLead',
+        params: {
+          first_name: leadData.firstName,
+          last_name: leadData.lastName,
+          email: leadData.email,
+          phone: leadData.phone,
+          company: leadData.serviceType || 'Individual',
+          lead_source: leadData.leadSource || 'CRM API v1',
+          notes: leadData.notes
+        }
+      },
+      requiresAuth: false,
+      auditContext: {
+        action: 'CRM_LEAD_CREATE_CALL',
+        resource: targetUrl,
+        userId: undefined,
+        ip,
+        userAgent,
+      }
+    })
+    if (!catalystRes.success) {
+      throw new Error(`Catalyst function call failed: ${catalystRes.status}`)
+    }
+
+    const catalystData = catalystRes.data;
+    const leadId = catalystData.data?.ROWID || 'generated-id';
 
     // Log successful creation
     await logAuditEvent({
@@ -109,8 +144,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
-      success: true,
+    return respond.created({
       message: "Lead created successfully in CRM",
       data: {
         lead_id: leadId,
@@ -144,13 +178,10 @@ export async function POST(request: NextRequest) {
       error_message: error instanceof Error ? error.message : "Unknown error"
     })
 
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: "Failed to create lead in CRM",
-        message: "Please try again or contact support"
-      },
-      { status: 500 }
+    return respond.serverError(
+      "Failed to create lead in CRM",
+      "crm_lead_create_failed",
+      { details: error instanceof Error ? error.message : String(error) }
     )
   }
 }
@@ -161,7 +192,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   const requestId = crypto.randomUUID()
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown"
+  const ip = request.headers.get("x-forwarded-for") || "unknown"
   const userAgent = request.headers.get("user-agent") || "unknown"
   const origin = request.headers.get("origin") || "unknown"
 
@@ -171,14 +202,9 @@ export async function PUT(request: NextRequest) {
     // Validate update data
     const validationResult = updateLeadSchema.safeParse(body)
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: validationResult.error.errors,
-        },
-        { status: 400 }
-      )
+      return respond.badRequest("Validation failed", "validation_error", {
+        details: validationResult.error.issues,
+      })
     }
 
     const updateData = validationResult.data
@@ -204,23 +230,69 @@ export async function PUT(request: NextRequest) {
 
     // Handle interview scheduled update
     if (updateData.interviewScheduled) {
-      await crmLeadManager.updateLeadInterviewScheduled(
-        updateData.leadId,
-        updateData.interviewScheduled
-      )
+      // Update lead via UnifiedApiClient
+      const client = new UnifiedApiClient('', cookieTokenProvider(request))
+      const targetUrl = getCrmEndpoint()
+      const updateRes = await client.request<any>({
+        method: 'POST',
+        url: targetUrl,
+        headers: { 'User-Agent': 'Snug-Kisses-CRM/2.0' },
+        body: {
+          action: 'updateLead',
+          params: {
+            lead_id: updateData.leadId,
+            interview_scheduled: updateData.interviewScheduled
+          }
+        },
+        requiresAuth: false,
+        auditContext: {
+          action: 'CRM_LEAD_UPDATE_CALL',
+          resource: targetUrl,
+          userId: undefined,
+          ip,
+          userAgent,
+        }
+      })
+      if (!updateRes.success) {
+        throw new Error(`Catalyst function call failed: ${updateRes.status}`)
+      }
+
       result.interview_scheduled = true
       result.next_phase = "phase_2_interview_scheduled"
     }
 
     // Handle interview completed update (convert to contact/deal)
     if (updateData.interviewCompleted) {
-      const conversionResult = await crmLeadManager.convertLeadToContact(
-        updateData.leadId,
-        updateData.interviewCompleted
-      )
+      const client2 = new UnifiedApiClient('', cookieTokenProvider(request))
+      const targetUrl2 = getCrmEndpoint()
+      const convRes = await client2.request<any>({
+        method: 'POST',
+        url: targetUrl2,
+        headers: { 'User-Agent': 'Snug-Kisses-CRM/2.0' },
+        body: {
+          action: 'convertLeadToContact',
+          params: {
+            lead_id: updateData.leadId,
+            interview_completed: updateData.interviewCompleted
+          }
+        },
+        requiresAuth: false,
+        auditContext: {
+          action: 'CRM_LEAD_CONVERT_CALL',
+          resource: targetUrl2,
+          userId: undefined,
+          ip,
+          userAgent,
+        }
+      })
+      if (!convRes.success) {
+        throw new Error(`Catalyst function call failed: ${convRes.status}`)
+      }
+
+      const convData = convRes.data
       result.lead_converted = true
-      result.contact_id = conversionResult.contactId
-      result.deal_id = conversionResult.dealId
+      result.contact_id = convData.contactId
+      result.deal_id = convData.dealId
       result.next_phase = "phase_3_interview_completed"
     }
 
@@ -240,8 +312,7 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
-      success: true,
+    return respond.ok({
       message: "Lead updated successfully",
       data: {
         lead_id: updateData.leadId,
@@ -266,13 +337,10 @@ export async function PUT(request: NextRequest) {
       error_message: error instanceof Error ? error.message : "Unknown error"
     })
 
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: "Failed to update lead in CRM",
-        message: "Please try again or contact support"
-      },
-      { status: 500 }
+    return respond.serverError(
+      "Failed to update lead in CRM",
+      "crm_lead_update_failed",
+      { details: error instanceof Error ? error.message : String(error) }
     )
   }
 }
@@ -283,7 +351,7 @@ export async function PUT(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID()
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown"
+  const ip = request.headers.get("x-forwarded-for") || "unknown"
   const userAgent = request.headers.get("user-agent") || "unknown"
   const origin = request.headers.get("origin") || "unknown"
 
@@ -295,32 +363,37 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1")
     const perPage = parseInt(searchParams.get("per_page") || "50")
 
-    // Build query parameters for Zoho CRM API
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      per_page: perPage.toString()
-    })
-
-    if (stage) queryParams.append("criteria", `Lead_Stage:equals:${stage}`)
-    if (status) queryParams.append("criteria", `Lead_Status:equals:${status}`)
-    if (assignedTo) queryParams.append("criteria", `Owner:equals:${assignedTo}`)
-
-    // Fetch leads from Zoho CRM
-    const crmResponse = await fetch(
-      `${process.env.ZOHO_CRM_API_URL}/crm/v2/Leads?${queryParams.toString()}`,
-      {
-        headers: {
-          "Authorization": `Zoho-oauthtoken ${process.env.ZOHO_CRM_ACCESS_TOKEN}`,
-          "Content-Type": "application/json"
+    // Fetch leads via UnifiedApiClient
+    const client = new UnifiedApiClient('', cookieTokenProvider(request))
+    const targetUrl = getCrmEndpoint()
+    const listRes = await client.request<any>({
+      method: 'POST',
+      url: targetUrl,
+      headers: { 'User-Agent': 'Snug-Kisses-CRM/2.0' },
+      body: {
+        action: 'getLeads',
+        params: { 
+          page, 
+          limit: perPage, 
+          stage, 
+          status, 
+          assigned_to: assignedTo 
         }
+      },
+      requiresAuth: false,
+      auditContext: {
+        action: 'CRM_LEADS_LIST_CALL',
+        resource: targetUrl,
+        userId: undefined,
+        ip,
+        userAgent,
       }
-    )
-
-    if (!crmResponse.ok) {
-      throw new Error(`CRM API error: ${crmResponse.status}`)
+    })
+    if (!listRes.success) {
+      throw new Error(`Catalyst function call failed: ${listRes.status}`)
     }
 
-    const crmData = await crmResponse.json()
+    const catalystData = listRes.data;
 
     // Log audit event
     await logAuditEvent({
@@ -336,19 +409,19 @@ export async function GET(request: NextRequest) {
         filters: { stage, status, assignedTo },
         page,
         per_page: perPage,
-        results_count: crmData.data?.length || 0
+        results_count: catalystData.data?.length || 0
       }
     })
 
-    return NextResponse.json({
-      success: true,
-      data: crmData.data || [],
+    return respond.ok({
+      data: catalystData.data || [],
       pagination: {
         page,
         per_page: perPage,
-        total: crmData.info?.count || 0,
-        more_records: crmData.info?.more_records || false
+        total: catalystData.total || 0,
+        more_records: (page * perPage) < (catalystData.total || 0)
       },
+      source: 'catalyst-native-integration',
       requestId
     })
 
@@ -367,20 +440,17 @@ export async function GET(request: NextRequest) {
       error_message: error instanceof Error ? error.message : "Unknown error"
     })
 
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: "Failed to retrieve leads from CRM",
-        message: "Please try again or contact support"
-      },
-      { status: 500 }
+    return respond.serverError(
+      "Failed to retrieve leads from CRM",
+      "crm_leads_get_failed",
+      { details: error instanceof Error ? error.message : String(error) }
     )
   }
 }
 
 // Handle preflight requests
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
+  return new Response(null, {
     status: 200,
     headers: {
       "Access-Control-Allow-Origin": "*",

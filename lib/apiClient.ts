@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { auditLogAccess } from './hipaa'; // Custom HIPAA logging
-from './zohoIntegration'; // Use existing Zoho integration
+import { zohoClient } from './zohoIntegration'; // Use existing Zoho integration
 
 interface ApiConfig {
   baseUrl: string;

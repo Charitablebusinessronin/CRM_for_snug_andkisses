@@ -1,0 +1,6 @@
+# Never commit private keys
+*.pem
+*.key
+*.pub
+# Allow a README for instructions
+!README.md

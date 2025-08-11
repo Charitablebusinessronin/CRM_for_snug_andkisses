@@ -2,7 +2,6 @@
 # SNUG & KISSES HEALTHCARE CRM - PRODUCTION DOCKER COMPOSE
 # Full-Stack TypeScript CRM with HIPAA Compliance & Enhanced Security
 # ============================================================================
-version: '3.9'
 
 services:
   # ============================================================================
@@ -18,27 +17,61 @@ services:
       - "4728:4728"
     
     # Environment configuration with HIPAA compliance
-    env_file:
-      - ./sabir-crm-typescript/.env.docker
     environment:
       NODE_ENV: production
       PORT: 4728
       HIPAA_AUDIT_LOGGING: "true"
       
-      # Enhanced Zoho Configuration with fallbacks
-      ZOHO_CRM_CLIENT_ID: ${ZOHO_CRM_CLIENT_ID:-${ZOHO_CLIENT_ID}}
-      ZOHO_CRM_CLIENT_SECRET: ${ZOHO_CRM_CLIENT_SECRET:-${ZOHO_CLIENT_SECRET}}
-      ZOHO_CRM_REFRESH_TOKEN: ${ZOHO_CRM_REFRESH_TOKEN:-${ZOHO_REFRESH_TOKEN}}
-      
-      # Multi-service Zoho Integration
-      ZOHO_BOOKS_CLIENT_ID: ${ZOHO_BOOKS_CLIENT_ID}
-      ZOHO_ANALYTICS_CLIENT_ID: ${ZOHO_ANALYTICS_CLIENT_ID}
-      ZOHO_CAMPAIGNS_CLIENT_ID: ${ZOHO_CAMPAIGNS_CLIENT_ID}
-      ZOHO_DESK_CLIENT_ID: ${ZOHO_DESK_CLIENT_ID}
-      
-      # Production Environment
+      # Core Zoho Configuration
+      ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID}
+      ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET}
+      ZOHO_REFRESH_TOKEN: ${ZOHO_REFRESH_TOKEN}
       ZOHO_ENVIRONMENT: ${ZOHO_ENVIRONMENT:-production}
+      
+      # Zoho CRM Configuration (use main credentials)
+      ZOHO_CRM_CLIENT_ID: ${ZOHO_CLIENT_ID}
+      ZOHO_CRM_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET}
+      ZOHO_CRM_REFRESH_TOKEN: ${ZOHO_REFRESH_TOKEN}
+      
+      # Additional Zoho Services (optional - default to empty if not set)
+      ZOHO_BOOKS_CLIENT_ID: ${ZOHO_BOOKS_CLIENT_ID:-}
+      ZOHO_BOOKS_CLIENT_SECRET: ${ZOHO_BOOKS_CLIENT_SECRET:-}
+      ZOHO_BOOKS_REFRESH_TOKEN: ${ZOHO_BOOKS_REFRESH_TOKEN:-}
+      ZOHO_BOOKS_ORG_ID: ${ZOHO_BOOKS_ORG_ID:-}
+      
+      ZOHO_ANALYTICS_CLIENT_ID: ${ZOHO_ANALYTICS_CLIENT_ID:-}
+      ZOHO_ANALYTICS_CLIENT_SECRET: ${ZOHO_ANALYTICS_CLIENT_SECRET:-}
+      ZOHO_ANALYTICS_REFRESH_TOKEN: ${ZOHO_ANALYTICS_REFRESH_TOKEN:-}
+      
+      ZOHO_CAMPAIGNS_CLIENT_ID: ${ZOHO_CAMPAIGNS_CLIENT_ID:-}
+      ZOHO_CAMPAIGNS_CLIENT_SECRET: ${ZOHO_CAMPAIGNS_CLIENT_SECRET:-}
+      ZOHO_CAMPAIGNS_REFRESH_TOKEN: ${ZOHO_CAMPAIGNS_REFRESH_TOKEN:-}
+      
+      ZOHO_DESK_CLIENT_ID: ${ZOHO_DESK_CLIENT_ID:-}
+      ZOHO_DESK_CLIENT_SECRET: ${ZOHO_DESK_CLIENT_SECRET:-}
+      ZOHO_DESK_REFRESH_TOKEN: ${ZOHO_DESK_REFRESH_TOKEN:-}
+      
+      # API URLs
+      ZOHO_CRM_API_URL: ${ZOHO_CRM_API_URL}
+      ZOHO_BOOKS_API_URL: ${ZOHO_BOOKS_API_URL}
+      ZOHO_CAMPAIGNS_API_URL: ${ZOHO_CAMPAIGNS_API_URL}
+      ZOHO_ANALYTICS_API_URL: ${ZOHO_ANALYTICS_API_URL}
+      
+      # Network configuration
       FRONTEND_URL: http://frontend:5369
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      
+      # Catalyst configuration
+      CATALYST_PROJECT_ID: ${CATALYST_PROJECT_ID}
+      CATALYST_ENVIRONMENT: ${CATALYST_ENVIRONMENT}
+      CATALYST_FROM_EMAIL: ${CATALYST_FROM_EMAIL}
+      
+      # Email configuration
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
     
     # HIPAA-compliant volume mounts for audit logging
     volumes:
@@ -87,6 +120,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        # Pass environment variables needed for build
+        NEXT_PUBLIC_API_URL: http://localhost:4728/api
+        NEXT_PUBLIC_CATALYST_CRM_URL: ${NEXTAUTH_URL}
+        NEXTAUTH_URL: ${NEXTAUTH_URL}
     container_name: sabir-crm-frontend
     restart: unless-stopped
     ports:
@@ -94,15 +132,26 @@ services:
     
     environment:
       NODE_ENV: production
+      
       # API endpoints for container communication
       NEXT_PUBLIC_API_URL: http://localhost:4728/api
       BACKEND_API_URL: http://backend:4728/api
+      
       # NextAuth configuration
-      NEXTAUTH_URL: http://localhost:5369
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-your-secret-key-here}
+      
+      # Build-time variables
+      NEXT_PUBLIC_CATALYST_CRM_URL: ${NEXTAUTH_URL}
+      
+      # JWT Configuration for Edge Runtime
+      JWT_SECRET_KEY_BASE64: ${JWT_SECRET_KEY_BASE64:-}
+      JWT_PUBLIC_KEY_BASE64: ${JWT_PUBLIC_KEY_BASE64:-}
+      JWT_REFRESH_SECRET_BASE64: ${JWT_REFRESH_SECRET_BASE64:-}
     
     # Enhanced health check
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5369/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5369/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

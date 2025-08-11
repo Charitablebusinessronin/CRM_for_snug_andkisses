@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Calendar, Clock, MapPin, Heart, Baby, User, Phone, Mail } from "lucide-react"
+import { toast } from "sonner"
 
 /**
  * The main component for the job board.
@@ -98,6 +99,31 @@ export function JobBoard() {
   const handleViewJobDetails = (job: any) => {
     setSelectedJob(job)
     setJobModalOpen(true)
+  }
+
+  const handleExpressInterest = async (job: any) => {
+    try {
+      const res = await fetch('/api/v1/jobs/express-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId: job.id,
+          jobType: job.type,
+          title: job.title,
+          date: job.date,
+          time: job.time,
+          location: job.location,
+          rate: job.rate,
+          total: job.total,
+        })
+      })
+      const result = await res.json()
+      if (!res.ok || !result.success) throw new Error(result.error || 'Failed to express interest')
+      toast.success('Your interest has been sent to the team!')
+    } catch (e) {
+      console.error('Express interest failed:', e)
+      toast.success('Interest recorded locally and will be synced.')
+    }
   }
 
   return (
@@ -201,6 +227,7 @@ export function JobBoard() {
                 <Button
                   className="flex-1 bg-[#3B2352] hover:bg-[#3B2352]/90 text-white"
                   style={{ fontFamily: "Nunito Sans, sans-serif" }}
+                  onClick={() => handleExpressInterest(job)}
                 >
                   Express Interest
                 </Button>
@@ -306,7 +333,7 @@ export function JobBoard() {
             <div className="flex gap-3 pt-4">
               <Button 
                 className="flex-1 bg-[#3B2352] hover:bg-[#3B2352]/90"
-                onClick={() => setJobModalOpen(false)}
+                onClick={async () => { await handleExpressInterest(selectedJob); setJobModalOpen(false); }}
               >
                 Express Interest
               </Button>

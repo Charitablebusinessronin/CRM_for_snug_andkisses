@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { zohoCRM } from "@/lib/zoho-crm-enhanced"
 import { logAuditEvent } from "@/lib/hipaa-audit-edge"
 
 // Zod validation schema for contact form data
@@ -12,7 +11,7 @@ const contactSchema = z.object({
     .string()
     .optional()
     .refine(
-      (phone) => !phone || /^[+]?[1-9][\d]{0,15}$/.test(phone.replace(/[\s\-$$$$]/g, "")),
+      (phone) => !phone || /^[+]?[1-9][\d]{0,15}$/.test(phone.replace(/["\s\-\$$\$]/g, "")),
       "Invalid phone number format",
     ),
   company: z.string().max(100, "Company name too long").optional(),
@@ -85,21 +84,23 @@ export async function POST(request: NextRequest) {
 
     const contactData = validationResult.data
 
-    // Create contact in Zoho CRM
-    const zohoResponse = await zohoCRM.createContact({
-      firstName: contactData.firstName,
-      lastName: contactData.lastName,
-      email: contactData.email,
-      phone: contactData.phone,
-      company: contactData.company,
-      serviceType: contactData.serviceType,
-      message: contactData.message,
-      source: contactData.source || "Website Contact Form",
-    })
+    // Create contact in Zoho CRM via Catalyst
+    const catalystResponse = await fetch(process.env.CATALYST_FUNCTION_URL!, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'createContact',
+        params: contactData
+      })
+    });
+
+    const catalystResult = await catalystResponse.json();
 
     // Check if contact creation was successful
-    const isSuccess = zohoResponse.data && zohoResponse.data[0]?.status === "success"
-    const zohoContactId = zohoResponse.data?.[0]?.details?.id
+    const isSuccess = catalystResult.success;
+    const zohoContactId = catalystResult.data?.contactId;
 
     if (isSuccess) {
       await logAuditEvent({
@@ -137,8 +138,8 @@ export async function POST(request: NextRequest) {
         { status: 201 },
       )
     } else {
-      // Handle Zoho CRM errors
-      const errorMessage = zohoResponse.data?.[0]?.message || "Failed to create contact"
+      // Handle Catalyst/Zoho CRM errors
+      const errorMessage = catalystResult.error || "Failed to create contact"
 
       await logAuditEvent({
         action: "CONTACT_CREATION_FAILED",
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
         error_message: errorMessage,
         data: {
           email: contactData.email,
-          zoho_response: zohoResponse,
+          catalyst_response: catalystResult,
         },
       })
 

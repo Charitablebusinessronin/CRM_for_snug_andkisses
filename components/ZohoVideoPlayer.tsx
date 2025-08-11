@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { auditLogAccess } from 'lib/hipaa'; // Custom HIPAA audit logging
+// import { auditLogAccess } from 'lib/hipaa'; // Custom HIPAA audit logging
 
 interface ZohoVideoPlayerProps {
   videoUrl: string;
@@ -19,10 +21,10 @@ export default function ZohoVideoPlayer({ videoUrl }: ZohoVideoPlayerProps) {
           },
         });
         setVideoData(response.data);
-        auditLogAccess('ZohoVideoPlayer', 'video_fetched', 'user_id_placeholder');
+        // auditLogAccess('ZohoVideoPlayer', 'video_fetched', 'user_id_placeholder');
       } catch (err) {
         setError('Failed to fetch video data');
-        auditLogAccess('ZohoVideoPlayer', 'fetch_error', 'user_id_placeholder', err.message);
+        // auditLogAccess('ZohoVideoPlayer', 'fetch_error', 'user_id_placeholder', err.message);
       }
     };
     fetchVideo();

@@ -1,0 +1,181 @@
+{
+  "tables": [
+    {
+      "table_name": "customers",
+      "columns": [
+        { "column_name": "name", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "email", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "phone", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "company", "data_type": "varchar", "max_length": 255 },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "active" },
+        { "column_name": "source", "data_type": "varchar", "max_length": 100 },
+        { "column_name": "lead_score", "data_type": "int", "default_value": 0 },
+        { "column_name": "address", "data_type": "text" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "deals",
+      "columns": [
+        { "column_name": "name", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "customer_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "amount", "data_type": "decimal", "precision": 10, "scale": 2 },
+        { "column_name": "stage", "data_type": "varchar", "max_length": 50, "default_value": "prospecting" },
+        { "column_name": "probability", "data_type": "int", "default_value": 10 },
+        { "column_name": "expected_close_date", "data_type": "date" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "support_tickets",
+      "columns": [
+        { "column_name": "ticket_number", "data_type": "varchar", "max_length": 50, "is_mandatory": true },
+        { "column_name": "title", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "description", "data_type": "text", "is_mandatory": true },
+        { "column_name": "customer_id", "data_type": "bigint" },
+        { "column_name": "customer_name", "data_type": "varchar", "max_length": 255 },
+        { "column_name": "customer_email", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "priority", "data_type": "varchar", "max_length": 20, "default_value": "medium" },
+        { "column_name": "category", "data_type": "varchar", "max_length": 50, "default_value": "general" },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "open" },
+        { "column_name": "assigned_to", "data_type": "bigint" },
+        { "column_name": "assigned_to_name", "data_type": "varchar", "max_length": 255 },
+        { "column_name": "response_due", "data_type": "datetime" },
+        { "column_name": "resolution_due", "data_type": "datetime" },
+        { "column_name": "first_response_time", "data_type": "datetime" },
+        { "column_name": "resolved_time", "data_type": "datetime" },
+        { "column_name": "resolution_notes", "data_type": "text" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "invoices",
+      "columns": [
+        { "column_name": "invoice_number", "data_type": "varchar", "max_length": 50, "is_mandatory": true },
+        { "column_name": "customer_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "customer_name", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "customer_email", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "subtotal", "data_type": "decimal", "precision": 10, "scale": 2, "default_value": 0 },
+        { "column_name": "tax_rate", "data_type": "decimal", "precision": 5, "scale": 2, "default_value": 0 },
+        { "column_name": "tax_amount", "data_type": "decimal", "precision": 10, "scale": 2, "default_value": 0 },
+        { "column_name": "total_amount", "data_type": "decimal", "precision": 10, "scale": 2, "is_mandatory": true },
+        { "column_name": "paid_amount", "data_type": "decimal", "precision": 10, "scale": 2, "default_value": 0 },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "draft" },
+        { "column_name": "due_date", "data_type": "date" },
+        { "column_name": "payment_terms", "data_type": "varchar", "max_length": 100, "default_value": "Net 30" },
+        { "column_name": "notes", "data_type": "text" },
+        { "column_name": "sent_time", "data_type": "datetime" },
+        { "column_name": "paid_time", "data_type": "datetime" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "employees",
+      "columns": [
+        { "column_name": "employee_id", "data_type": "varchar", "max_length": 50, "is_mandatory": true },
+        { "column_name": "name", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "email", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "phone", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "department", "data_type": "varchar", "max_length": 100 },
+        { "column_name": "position", "data_type": "varchar", "max_length": 100 },
+        { "column_name": "hire_date", "data_type": "date" },
+        { "column_name": "salary", "data_type": "decimal", "precision": 10, "scale": 2 },
+        { "column_name": "manager_id", "data_type": "bigint" },
+        { "column_name": "address", "data_type": "text" },
+        { "column_name": "emergency_contact", "data_type": "text" },
+        { "column_name": "benefits", "data_type": "text" },
+        { "column_name": "employment_type", "data_type": "varchar", "max_length": 50, "default_value": "full_time" },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "active" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "campaigns",
+      "columns": [
+        { "column_name": "name", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "type", "data_type": "varchar", "max_length": 50, "default_value": "email" },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "draft" },
+        { "column_name": "subject", "data_type": "varchar", "max_length": 255 },
+        { "column_name": "content", "data_type": "text" },
+        { "column_name": "target_audience", "data_type": "text" },
+        { "column_name": "scheduled_time", "data_type": "datetime" },
+        { "column_name": "sent_time", "data_type": "datetime" },
+        { "column_name": "sent_count", "data_type": "int", "default_value": 0 },
+        { "column_name": "open_count", "data_type": "int", "default_value": 0 },
+        { "column_name": "click_count", "data_type": "int", "default_value": 0 },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "users",
+      "columns": [
+        { "column_name": "name", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "email", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "password", "data_type": "varchar", "max_length": 255, "is_mandatory": true },
+        { "column_name": "role", "data_type": "varchar", "max_length": 50, "is_mandatory": true },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "active" },
+        { "column_name": "phone", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "employee_id", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "department", "data_type": "varchar", "max_length": 100 },
+        { "column_name": "last_login", "data_type": "datetime" },
+        { "column_name": "password_reset_token", "data_type": "varchar", "max_length": 255 },
+        { "column_name": "password_reset_expires", "data_type": "datetime" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "audit_logs",
+      "columns": [
+        { "column_name": "user_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "action", "data_type": "varchar", "max_length": 100, "is_mandatory": true },
+        { "column_name": "details", "data_type": "text", "is_mandatory": true },
+        { "column_name": "ip_address", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "user_agent", "data_type": "text" },
+        { "column_name": "resource_type", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "resource_id", "data_type": "varchar", "max_length": 50 },
+        { "column_name": "status", "data_type": "varchar", "max_length": 20, "default_value": "success" },
+        { "column_name": "timestamp", "data_type": "datetime", "auto_fill": "created_time" }
+      ]
+    },
+    {
+      "table_name": "client_assignments",
+      "columns": [
+        { "column_name": "employee_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "customer_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "assignment_type", "data_type": "varchar", "max_length": 50, "default_value": "primary" },
+        { "column_name": "start_date", "data_type": "date", "is_mandatory": true },
+        { "column_name": "end_date", "data_type": "date" },
+        { "column_name": "status", "data_type": "varchar", "max_length": 50, "default_value": "active" },
+        { "column_name": "notes", "data_type": "text" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    },
+    {
+      "table_name": "shift_notes",
+      "columns": [
+        { "column_name": "employee_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "customer_id", "data_type": "bigint", "is_mandatory": true },
+        { "column_name": "shift_date", "data_type": "date", "is_mandatory": true },
+        { "column_name": "start_time", "data_type": "time", "is_mandatory": true },
+        { "column_name": "end_time", "data_type": "time", "is_mandatory": true },
+        { "column_name": "notes", "data_type": "text", "is_mandatory": true },
+        { "column_name": "services_provided", "data_type": "text" },
+        { "column_name": "medications_administered", "data_type": "text" },
+        { "column_name": "vital_signs", "data_type": "text" },
+        { "column_name": "client_mood", "data_type": "varchar", "max_length": 100 },
+        { "column_name": "incidents", "data_type": "text" },
+        { "column_name": "supervisor_review", "data_type": "varchar", "max_length": 50, "default_value": "pending" },
+        { "column_name": "created_time", "data_type": "datetime", "auto_fill": "created_time" },
+        { "column_name": "modified_time", "data_type": "datetime", "auto_fill": "modified_time" }
+      ]
+    }
+  ]
+}

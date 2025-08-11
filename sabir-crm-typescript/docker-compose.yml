@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  sabir-crm-typescript:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: sabir-crm-typescript-api
+    ports:
+      - "4728:4728"  # Sabir's preferred port - no conflict with existing services
+    environment:
+      - NODE_ENV=development
+      - PORT=4728
+      - FRONTEND_URL=http://localhost:5369
+      - JWT_PRIVATE_KEY=dev-private-key-change-in-production
+      - JWT_PUBLIC_KEY=dev-public-key-change-in-production
+      - JWT_REFRESH_SECRET=dev-refresh-secret-change-in-production
+      - ZOHO_CLIENT_ID=1000.DEVELOPMENT_CLIENT_ID
+      - ZOHO_CLIENT_SECRET=development_client_secret
+      - ZOHO_REFRESH_TOKEN=1000.development_refresh_token
+      - ZOHO_ENVIRONMENT=sandbox
+      - ZOHO_DOMAIN=com
+      - LOG_LEVEL=debug
+      - CORS_ORIGIN=http://localhost:5369,http://localhost:4728
+    volumes:
+      - ./logs:/app/logs
+      - ./src:/app/src:ro  # For development hot-reload (optional)
+    networks:
+      - crm-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4728/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sabir-crm-api.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.services.sabir-crm-api.loadbalancer.server.port=4728"
+
+  # Development service with hot-reload
+  sabir-crm-typescript-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sabir-crm-typescript-dev
+    ports:
+      - "4728:4728"
+    environment:
+      - NODE_ENV=development
+      - PORT=4728
+      - FRONTEND_URL=http://localhost:5369
+      - JWT_PRIVATE_KEY=dev-private-key
+      - JWT_PUBLIC_KEY=dev-public-key
+      - JWT_REFRESH_SECRET=dev-refresh-secret
+      - ZOHO_CLIENT_ID=1000.DEVELOPMENT_CLIENT_ID
+      - ZOHO_CLIENT_SECRET=development_client_secret
+      - ZOHO_REFRESH_TOKEN=1000.development_refresh_token
+      - ZOHO_ENVIRONMENT=sandbox
+      - ZOHO_DOMAIN=com
+      - LOG_LEVEL=debug
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    networks:
+      - crm-network
+    restart: unless-stopped
+    profiles:
+      - dev
+
+networks:
+  crm-network:
+    external: true
+    name: crm_for_snug_andkisses_default

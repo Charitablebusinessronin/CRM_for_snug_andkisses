@@ -1,0 +1,19 @@
+# Unified Frontend (Next.js) Dockerfile
+FROM node:20-alpine AS base
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Install tini and libc6-compat (sharp/Next.js image requirement)
+RUN apk add --no-cache tini libc6-compat
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Install dependencies (include dev deps needed for Next.js/TypeScript build)
+COPY package*.json ./
+RUN npm install --legacy-peer-deps --include=dev --production=false
+
+# Copy app source and build
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "run", "start"]

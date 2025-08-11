@@ -7,7 +7,11 @@ module.exports = (req, res) => {
     case "POST":
       return handleLogin(catalystApp, req, res)
     case "GET":
-      return handleGetUser(catalystApp, req, res)
+      if (req.path === '/auth/zoho/callback') {
+        return handleZohoOAuthCallback(catalystApp, req, res)
+      } else {
+        return handleGetUser(catalystApp, req, res)
+      }
     default:
       return res.status(405).json({ error: "Method not allowed" })
   }
@@ -102,6 +106,44 @@ async function handleGetUser(catalystApp, req, res) {
   } catch (error) {
     console.error("Get user error:", error)
     res.status(401).json({ error: "Invalid token" })
+  }
+}
+
+async function handleZohoOAuthCallback(catalystApp, req, res) {
+  try {
+    const { code } = req.query;
+    if (!code) {
+      return res.status(400).json({ error: 'Authorization code missing' });
+    }
+
+    // Exchange authorization code for access and refresh tokens
+    const client_id = process.env.ZOHO_CLIENT_ID;
+    const client_secret = process.env.ZOHO_CLIENT_SECRET;
+    const redirect_uri = process.env.REDIRECT_URI;
+
+    const tokenUrl = `https://accounts.zoho.com/oauth/v2/token?code=${code}&client_id=${client_id}&client_secret=${client_secret}&redirect_uri=${redirect_uri}&grant_type=authorization_code`;
+
+    const axios = require('axios');
+    const response = await axios.post(tokenUrl);
+    const { access_token, refresh_token, expires_in } = response.data;
+
+    // Store refresh token securely (e.g., in Catalyst DataStore)
+    const datastore = catalystApp.datastore();
+    const zohoConfigTable = datastore.table('ZohoConfig'); // Assuming a table named ZohoConfig
+
+    // For simplicity, storing a single config. In a real app, link to a user or org.
+    await zohoConfigTable.upsertRow({
+      ROWID: 'zoho_tokens',
+      access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: new Date(Date.now() + expires_in * 1000).toISOString()
+    });
+
+    res.status(200).json({ message: 'Zoho OAuth successful', access_token, refresh_token });
+
+  } catch (error) {
+    console.error('Zoho OAuth callback error:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: 'Failed to complete Zoho OAuth' });
   }
 }
 

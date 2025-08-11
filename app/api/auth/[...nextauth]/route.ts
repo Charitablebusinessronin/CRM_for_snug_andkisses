@@ -7,4 +7,4 @@ import { authOptions } from "@/lib/auth-enhanced"
 
 const handler = NextAuth(authOptions)
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST, authOptions }

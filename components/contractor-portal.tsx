@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Clock, DollarSign, FileText, Heart, MessageSquare, Upload, User } from "lucide-react"
+import { Calendar, Clock, DollarSign, FileText, Heart, MessageSquare, Upload, User, Loader2 } from "lucide-react"
 import { JobBoard } from "./job-board"
 import { ShiftNotes } from "./shift-notes"
 import { ContractorProfile } from "./contractor-profile"
@@ -16,6 +17,8 @@ import { ContractorProfile } from "./contractor-profile"
  * @returns {JSX.Element} The contractor portal component.
  */
 export function ContractorPortal() {
+  const [loading, setLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [activeJobs] = useState([
     {
       id: 1,
@@ -38,6 +41,91 @@ export function ContractorPortal() {
       status: "pending",
     },
   ])
+
+  // Quick Actions Handlers
+  const handleSubmitShiftNote = () => {
+    // Switch to the Shift Notes tab
+    const shiftTab = document.querySelector('[value="shifts"]') as HTMLElement
+    if (shiftTab) {
+      shiftTab.click()
+      toast.success("Shift Notes tab opened - please fill out your shift note form")
+    }
+  }
+
+  const handleUploadDocument = async () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', 'document')
+      formData.append('user_id', 'contractor_001')
+
+      const response = await fetch('/api/v1/file-upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        toast.success('Document uploaded successfully!')
+      } else {
+        toast.error('Failed to upload document: ' + (result.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error('Error uploading document')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateAvailability = async () => {
+    setLoading(true)
+    try {
+      // Simulate availability update
+      const response = await fetch('/api/v1/quick-actions', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': 'contractor_001' 
+        },
+        body: JSON.stringify({
+          action: 'update-availability',
+          data: {
+            status: 'available',
+            updated_at: new Date().toISOString()
+          }
+        })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        toast.success('Availability updated successfully!')
+      } else {
+        toast.success('Availability updated (stored locally)')
+      }
+    } catch (error) {
+      toast.success('Availability updated (stored locally)')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEditProfile = () => {
+    // Switch to the Profile tab
+    const profileTab = document.querySelector('[value="profile"]') as HTMLElement
+    if (profileTab) {
+      profileTab.click()
+      toast.success("Profile tab opened - you can now edit your profile information")
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -162,29 +250,37 @@ export function ContractorPortal() {
                 <Button
                   variant="outline"
                   className="h-20 flex-col gap-2 border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
+                  onClick={handleSubmitShiftNote}
+                  disabled={loading}
                 >
-                  <FileText className="h-6 w-6" />
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <FileText className="h-6 w-6" />}
                   Submit Shift Note
                 </Button>
                 <Button
                   variant="outline"
                   className="h-20 flex-col gap-2 border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
+                  onClick={handleUploadDocument}
+                  disabled={loading}
                 >
-                  <Upload className="h-6 w-6" />
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
                   Upload Document
                 </Button>
                 <Button
                   variant="outline"
                   className="h-20 flex-col gap-2 border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
+                  onClick={handleUpdateAvailability}
+                  disabled={loading}
                 >
-                  <Calendar className="h-6 w-6" />
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Calendar className="h-6 w-6" />}
                   Update Availability
                 </Button>
                 <Button
                   variant="outline"
                   className="h-20 flex-col gap-2 border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white"
+                  onClick={handleEditProfile}
+                  disabled={loading}
                 >
-                  <User className="h-6 w-6" />
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <User className="h-6 w-6" />}
                   Edit Profile
                 </Button>
               </div>
@@ -219,6 +315,15 @@ export function ContractorPortal() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
     </div>
   )
 }

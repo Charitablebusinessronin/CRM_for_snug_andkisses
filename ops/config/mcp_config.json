@@ -1,0 +1,88 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "--security-opt",
+        "no-new-privileges",
+        "--memory=512m",
+        "--cpus=0.5",
+        "mcp/context7"
+      ],
+      "transport": "stdio",
+      "env": {}
+    },
+    "notion": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "--security-opt",
+        "no-new-privileges",
+        "--memory=512m",
+        "--cpus=0.5",
+        "mcp/notion"
+      ],
+      "transport": "stdio",
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      }
+    },
+    "desktop-commander": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "--security-opt",
+        "no-new-privileges",
+        "--memory=256m",
+        "--cpus=0.25",
+        "mcp/desktop-commander"
+      ],
+      "transport": "stdio",
+      "env": {}
+    },
+    "dockerhub": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "--security-opt",
+        "no-new-privileges",
+        "--memory=256m",
+        "--cpus=0.25",
+        "mcp/dockerhub"
+      ],
+      "transport": "stdio",
+      "env": {}
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "--security-opt",
+        "no-new-privileges",
+        "--memory=256m",
+        "--cpus=0.25",
+        "ghcr.io/github/github-mcp-server:latest"
+      ],
+      "transport": "stdio",
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}

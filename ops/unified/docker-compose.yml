@@ -1,0 +1,40 @@
+services:
+  crm-backend:
+    build:
+      context: ../..
+      dockerfile: ops/unified/Dockerfile.backend
+    container_name: crm-backend
+    ports:
+      - "${EXPRESS_PORT:-9000}:9000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - hipaa_logs:/app/logs
+    restart: unless-stopped
+
+  crm-frontend:
+    build:
+      context: ../..
+      dockerfile: ops/unified/Dockerfile.frontend
+    container_name: crm-frontend
+    ports:
+      - "${NEXTJS_PORT:-5369}:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+    depends_on:
+      crm-backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  hipaa_logs:
+    name: hipaa_logs

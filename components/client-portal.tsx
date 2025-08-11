@@ -1,20 +1,127 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { Calendar, Clock, DollarSign, Heart, MessageSquare, Star, User, Baby, Shield } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Calendar, Clock, DollarSign, Heart, MessageSquare, Star, User, Baby, Shield, Phone, Mail, Calendar as CalendarIcon, AlertCircle } from "lucide-react"
 
-/**
- * The main component for the client portal.
- * It displays information about the client's services, appointments, and doulas.
- * @returns {JSX.Element} The client portal component.
- */
+interface ClientData {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  serviceHours: {
+    total: number
+    used: number
+    remaining: number
+  }
+  currentDoula?: {
+    id: string
+    name: string
+    specialization: string
+    rating: number
+    reviewCount: number
+    nextVisit?: string
+  }
+  recentActivities: Array<{
+    id: string
+    date: string
+    type: string
+    duration: string
+    notes: string
+  }>
+  upcomingAppointments: Array<{
+    id: string
+    date: string
+    time: string
+    doula: string
+    type: string
+  }>
+  messages: Array<{
+    id: string
+    from: string
+    message: string
+    timestamp: string
+    unread: boolean
+  }>
+}
+
 export function ClientPortal() {
-  const [clientStage] = useState("active") // prospect, intake, active, paused
+  const [clientData, setClientData] = useState<ClientData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchClientData()
+  }, [])
+
+  const fetchClientData = async () => {
+    try {
+      const response = await fetch('/api/v1/client/dashboard')
+      if (!response.ok) throw new Error('Failed to fetch client data')
+      const data = await response.json()
+      setClientData(data.client)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const sendMessage = async (message: string) => {
+    try {
+      const response = await fetch('/api/v1/client/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      })
+      if (response.ok) {
+        fetchClientData() // Refresh data
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err)
+    }
+  }
+
+  const scheduleAppointment = async (doulaId: string, datetime: string, type: string) => {
+    try {
+      const response = await fetch('/api/v1/client/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doulaId, datetime, type })
+      })
+      if (response.ok) {
+        fetchClientData() // Refresh data
+      }
+    } catch (err) {
+      console.error('Failed to schedule appointment:', err)
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6 text-center">Loading your dashboard...</div>
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (!clientData) {
+    return <div className="p-6 text-center">No client data available</div>
+  }
+
+  const nextAppointment = clientData.upcomingAppointments[0]
+  const unreadMessageCount = clientData.messages.filter(m => m.unread).length
 
   return (
     <div className="space-y-6">
@@ -23,10 +130,13 @@ export function ClientPortal() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
             <Heart className="h-6 w-6 text-[#D4AF37]" />
-            Welcome, Sarah!
+            Welcome, {clientData.firstName}!
           </CardTitle>
           <CardDescription className="text-white/80" style={{ fontFamily: "Lato, sans-serif" }}>
-            Your next appointment is tomorrow at 10:00 AM with Jessica
+            {nextAppointment 
+              ? `Your next appointment is ${nextAppointment.date} at ${nextAppointment.time} with ${nextAppointment.doula}`
+              : "No upcoming appointments scheduled"
+            }
           </CardDescription>
         </CardHeader>
       </Card>
@@ -36,28 +146,28 @@ export function ClientPortal() {
         <Card className="border-[#D7C7ED]/50">
           <CardContent className="p-4 text-center">
             <Clock className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">24</div>
+            <div className="text-2xl font-bold text-[#3B2352]">{clientData.serviceHours.remaining}</div>
             <div className="text-sm text-gray-600">Hours Remaining</div>
           </CardContent>
         </Card>
         <Card className="border-[#D7C7ED]/50">
           <CardContent className="p-4 text-center">
             <Calendar className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">8</div>
+            <div className="text-2xl font-bold text-[#3B2352]">{clientData.serviceHours.used}</div>
             <div className="text-sm text-gray-600">Sessions Used</div>
           </CardContent>
         </Card>
         <Card className="border-[#D7C7ED]/50">
           <CardContent className="p-4 text-center">
             <Star className="h-8 w-8 text-[#D4AF37] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">4.9</div>
-            <div className="text-sm text-gray-600">Avg Rating</div>
+            <div className="text-2xl font-bold text-[#3B2352]">{clientData.currentDoula?.rating || 'N/A'}</div>
+            <div className="text-sm text-gray-600">Doula Rating</div>
           </CardContent>
         </Card>
         <Card className="border-[#D7C7ED]/50">
           <CardContent className="p-4 text-center">
             <MessageSquare className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-[#3B2352]">2</div>
+            <div className="text-2xl font-bold text-[#3B2352]">{unreadMessageCount}</div>
             <div className="text-sm text-gray-600">New Messages</div>
           </CardContent>
         </Card>
@@ -85,47 +195,77 @@ export function ClientPortal() {
 
         <TabsContent value="dashboard" className="space-y-6">
           {/* Current Doula */}
-          <Card className="border-[#3B2352]/20">
-            <CardHeader>
-              <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Your Assigned Doula</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src="/placeholder.svg?height=64&width=64" />
-                  <AvatarFallback className="bg-[#D7C7ED] text-[#3B2352]">JD</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-[#3B2352]">Jessica Davis</h3>
-                  <p className="text-gray-600">Certified Postpartum Doula</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Star className="h-4 w-4 text-[#D4AF37] fill-current" />
-                    <span className="text-sm">4.9/5 (23 reviews)</span>
+          {clientData.currentDoula ? (
+            <Card className="border-[#3B2352]/20">
+              <CardHeader>
+                <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Your Assigned Doula</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarFallback className="bg-[#D7C7ED] text-[#3B2352]">
+                      {clientData.currentDoula.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-[#3B2352]">{clientData.currentDoula.name}</h3>
+                    <p className="text-gray-600">{clientData.currentDoula.specialization}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Star className="h-4 w-4 text-[#D4AF37] fill-current" />
+                      <span className="text-sm">{clientData.currentDoula.rating}/5 ({clientData.currentDoula.reviewCount} reviews)</span>
+                    </div>
+                  </div>
+                  <div className="text-right space-y-2">
+                    <Button 
+                      variant="outline" 
+                      className="border-[#3B2352] text-[#3B2352] block w-full"
+                      onClick={() => sendMessage(`Hello ${clientData.currentDoula?.name}, I'd like to schedule a consultation.`)}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Message
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="border-[#3B2352] text-[#3B2352] block w-full"
+                      onClick={() => scheduleAppointment(clientData.currentDoula!.id, new Date().toISOString(), 'consultation')}
+                    >
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      Schedule
+                    </Button>
+                    {clientData.currentDoula.nextVisit && (
+                      <div className="text-sm text-gray-600">Next visit: {clientData.currentDoula.nextVisit}</div>
+                    )}
                   </div>
                 </div>
-                <div className="text-right">
-                  <Button variant="outline" className="border-[#3B2352] text-[#3B2352] mb-2">
-                    Message
-                  </Button>
-                  <div className="text-sm text-gray-600">Next visit: Tomorrow 10 AM</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-[#3B2352]/20">
+              <CardHeader>
+                <CardTitle style={{ fontFamily: "Merriweather, serif" }}>No Doula Assigned</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">You don't have an assigned doula yet. Browse available doulas and make a selection.</p>
+                <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+                  Browse Available Doulas
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Service Progress */}
           <Card className="border-[#3B2352]/20">
             <CardHeader>
               <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Service Progress</CardTitle>
-              <CardDescription>Your postpartum care journey</CardDescription>
+              <CardDescription>Your care journey</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Hours Used</span>
-                  <span>16 of 40 hours</span>
+                  <span>{clientData.serviceHours.used} of {clientData.serviceHours.total} hours</span>
                 </div>
-                <Progress value={40} className="h-2" />
+                <Progress value={(clientData.serviceHours.used / clientData.serviceHours.total) * 100} className="h-2" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
@@ -154,39 +294,24 @@ export function ClientPortal() {
               <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[
-                  {
-                    date: "2024-01-10",
-                    activity: "Session completed with Jessica",
-                    duration: "4 hours",
-                    notes: "Great progress with feeding routine",
-                  },
-                  {
-                    date: "2024-01-08",
-                    activity: "Check-in call",
-                    duration: "30 minutes",
-                    notes: "Discussed sleep schedule adjustments",
-                  },
-                  {
-                    date: "2024-01-05",
-                    activity: "Session completed with Jessica",
-                    duration: "6 hours",
-                    notes: "Overnight support, baby slept well",
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-4 p-3 border border-[#D7C7ED]/50 rounded-lg">
-                    <div className="w-2 h-2 bg-[#3B2352] rounded-full mt-2" />
-                    <div className="flex-1">
-                      <div className="font-medium">{item.activity}</div>
-                      <div className="text-sm text-gray-600">
-                        {item.date} • {item.duration}
+              {clientData.recentActivities.length > 0 ? (
+                <div className="space-y-4">
+                  {clientData.recentActivities.map((item) => (
+                    <div key={item.id} className="flex items-start gap-4 p-3 border border-[#D7C7ED]/50 rounded-lg">
+                      <div className="w-2 h-2 bg-[#3B2352] rounded-full mt-2" />
+                      <div className="flex-1">
+                        <div className="font-medium">{item.type}</div>
+                        <div className="text-sm text-gray-600">
+                          {item.date} • {item.duration}
+                        </div>
+                        <div className="text-sm text-gray-700 mt-1">{item.notes}</div>
                       </div>
-                      <div className="text-sm text-gray-700 mt-1">{item.notes}</div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">No recent activity to display</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -198,9 +323,11 @@ export function ClientPortal() {
               <CardDescription>Browse and select your preferred doula</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <User className="h-12 w-12 mx-auto mb-4 text-[#D7C7ED]" />
-                <p>Doula selection interface would be implemented here</p>
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">Browse our certified doulas and find the perfect match for your needs.</p>
+                <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+                  Browse Available Doulas
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -213,10 +340,33 @@ export function ClientPortal() {
               <CardDescription>View and manage your appointments</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="h-12 w-12 mx-auto mb-4 text-[#D7C7ED]" />
-                <p>Calendar scheduling interface would be integrated here</p>
-              </div>
+              {clientData.upcomingAppointments.length > 0 ? (
+                <div className="space-y-4">
+                  {clientData.upcomingAppointments.map((appointment) => (
+                    <Card key={appointment.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{appointment.type}</h4>
+                          <p className="text-sm text-gray-600">With {appointment.doula}</p>
+                          <p className="text-sm text-gray-600">{appointment.date} at {appointment.time}</p>
+                        </div>
+                        <div className="space-x-2">
+                          <Button variant="outline" size="sm">Reschedule</Button>
+                          <Button variant="outline" size="sm">Cancel</Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600 mb-4">No upcoming appointments scheduled.</p>
+                  <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+                    Schedule Appointment
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -228,9 +378,32 @@ export function ClientPortal() {
               <CardDescription>Manage your service hours and payments</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <DollarSign className="h-12 w-12 mx-auto mb-4 text-[#D7C7ED]" />
-                <p>Billing and payment interface would be implemented here</p>
+              <div className="space-y-4">
+                <Card className="p-4">
+                  <h4 className="font-medium mb-2">Service Package Summary</h4>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-[#3B2352]">{clientData.serviceHours.total}</div>
+                      <div className="text-sm text-gray-600">Total Hours</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-[#3B2352]">{clientData.serviceHours.used}</div>
+                      <div className="text-sm text-gray-600">Used</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-[#3B2352]">{clientData.serviceHours.remaining}</div>
+                      <div className="text-sm text-gray-600">Remaining</div>
+                    </div>
+                  </div>
+                </Card>
+                <div className="flex gap-2">
+                  <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white flex-1">
+                    View Invoice History
+                  </Button>
+                  <Button variant="outline" className="border-[#3B2352] text-[#3B2352] flex-1">
+                    Purchase Additional Hours
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -244,12 +417,30 @@ export function ClientPortal() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Button className="w-full justify-start bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+                <Card className="p-4">
+                  <h4 className="font-medium mb-2">Emergency Contact</h4>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4" />
+                    <span>24/7 Support: (555) 123-4567</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm mt-1">
+                    <Mail className="h-4 w-4" />
+                    <span>support@snugandkisses.com</span>
+                  </div>
+                </Card>
+                <Button 
+                  className="w-full justify-start bg-[#3B2352] hover:bg-[#3B2352]/90 text-white"
+                  onClick={() => sendMessage('I need support with my current care plan.')}
+                >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Contact Support Team
                 </Button>
-                <Button variant="outline" className="w-full justify-start border-[#3B2352] text-[#3B2352]">
-                  <Calendar className="h-4 w-4 mr-2" />
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start border-[#3B2352] text-[#3B2352]"
+                  onClick={() => scheduleAppointment('support', new Date().toISOString(), 'support_call')}
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
                   Schedule Support Call
                 </Button>
                 <Button variant="outline" className="w-full justify-start border-[#3B2352] text-[#3B2352]">

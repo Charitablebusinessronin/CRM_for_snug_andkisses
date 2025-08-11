@@ -10,8 +10,6 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
-  // Disable static optimization for API routes to prevent build errors
-  generateStaticParams: false,
   experimental: {
     forceSwcTransforms: true,
   },

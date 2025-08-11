@@ -102,3 +102,6 @@ out/
 # IDE files
 # OS files
 desktop.ini
+node_modules/
+*/node_modules/
+**/node_modules/

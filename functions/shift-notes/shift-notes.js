@@ -53,6 +53,9 @@ async function handleCreateShiftNote(catalystApp, req, res) {
 
     const newShiftNote = await table.insertRow(shiftNoteData)
 
+    // Integrate with Zoho CRM (e.g., create a Note or Task)
+    await createZohoNoteFromShiftNote(catalystApp, newShiftNote, req);
+
     // Send notification to admin/supervisor
     await sendShiftNoteNotification(catalystApp, newShiftNote)
 
@@ -248,5 +251,32 @@ async function logAuditEvent(catalystApp, eventData) {
     })
   } catch (error) {
     console.error("Audit logging error:", error)
+  }
+}
+
+async function createZohoNoteFromShiftNote(catalystApp, shiftNote, req) {
+  try {
+    // Use Catalyst native integration with admin scope for CRM operations
+    const adminApp = catalyst.initialize(req, { scope: 'admin' });
+    const dataStore = adminApp.cloudscale.dataStore.getComponentInstance();
+    
+    console.log('Integrating shift note with Zoho CRM via Catalyst:', shiftNote);
+
+    const noteData = {
+      note_title: `Shift Note for ${shiftNote.shift_date}`,
+      note_content: shiftNote.notes,
+      client_id: shiftNote.client_id || null,
+      contractor_id: shiftNote.contractor_id || null,
+      shift_note_id: shiftNote.ROWID,
+      created_time: new Date().toISOString(),
+      created_by: 'shift_notes_integration'
+    };
+
+    // Store note in Catalyst DataStore with native Zoho integration
+    const noteResult = await dataStore.insertRows('zoho_notes', [noteData]);
+    console.log('Zoho Note created via Catalyst integration:', noteResult[0]);
+
+  } catch (error) {
+    console.error('Error creating Zoho Note from Shift Note via Catalyst:', error);
   }
 }

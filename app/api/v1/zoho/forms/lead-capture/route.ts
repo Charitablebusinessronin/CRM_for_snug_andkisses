@@ -3,9 +3,11 @@
  * Phase 1: Integrates form submission with Zoho CRM and triggers Zoho Campaigns
  * HIPAA-compliant lead processing with automated workflow triggers
  */
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { z } from "zod"
 import { logAuditEvent } from "@/lib/hipaa-audit-edge"
+import { headers } from "next/headers"
+import respond from "@/lib/api-respond"
 
 // Lead capture validation schema matching Zoho Forms structure
 const leadCaptureSchema = z.object({
@@ -37,9 +39,14 @@ const leadCaptureSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID()
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown"
+  const ip = request.headers.get("x-forwarded-for") || "unknown"
   const userAgent = request.headers.get("user-agent") || "unknown"
-  const origin = request.headers.get("origin") || "unknown"
+  // Derive origin robustly for server-side internal calls
+  const hdrs = await headers()
+  const url = new URL(request.url)
+  const proto = hdrs.get("x-forwarded-proto") || url.protocol.replace(":", "") || "https"
+  const host = hdrs.get("x-forwarded-host") || url.host
+  const origin = request.headers.get("origin") || `${proto}://${host}`
 
   try {
     const body = await request.json()
@@ -57,17 +64,12 @@ export async function POST(request: NextRequest) {
         origin,
         request_id: requestId,
         error_message: "Validation failed",
-        data: { errors: validationResult.error.errors }
+        data: { errors: validationResult.error.issues }
       })
 
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: validationResult.error.errors,
-        },
-        { status: 400 }
-      )
+      return respond.badRequest("Validation failed", "validation_error", {
+        details: validationResult.error.issues,
+      })
     }
 
     const leadData = validationResult.data
@@ -92,109 +94,70 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Step 1: Submit to Zoho Forms API
-    const zohoFormsResponse = await fetch(
-      `${process.env.ZOHO_FORMS_API_URL}/api/v1.1/forms/${process.env.ZOHO_LEAD_CAPTURE_FORM_ID}/entries`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Zoho-oauthtoken ${process.env.ZOHO_FORMS_ACCESS_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          data: {
-            Single_Line: leadData.Single_Line,
-            Single_Line1: leadData.Single_Line1,
-            Email: leadData.Email,
-            Phone_Number: leadData.Phone_Number,
-            Date: leadData.Date,
-            Number: leadData.Number,
-            Dropdown: leadData.Dropdown,
-            Single_Line2: leadData.Single_Line2,
-            Radio: leadData.Radio,
-            Dropdown1: leadData.Dropdown1,
-            Dropdown2: leadData.Dropdown2,
-            Multi_Line: leadData.Multi_Line,
-            Checkbox: leadData.Checkbox,
-            Checkbox1: leadData.Checkbox1
-          }
+    // Phase 1: Create Lead via internal Catalyst-backed endpoint
+    const createLeadResp = await fetch(`${origin}/api/crm/leads`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': 'public-form',
+        'user-agent': 'Snug-Kisses-CRM/2.0'
+      },
+      body: JSON.stringify({
+        First_Name: leadData.Single_Line,
+        Last_Name: leadData.Single_Line1,
+        Email: leadData.Email,
+        Phone: leadData.Phone_Number,
+        Service_Type: leadData.Dropdown,
+        Expected_Due_Date: leadData.Date,
+        Notes: leadData.Multi_Line,
+        Intake_Source: 'Zoho Forms',
+        HIPAA_Consent: leadData.Checkbox1 === true,
+        automation_trigger: leadData.automation_trigger,
+        client_journey_stage: leadData.client_journey_stage
+      })
+    })
+
+    if (!createLeadResp.ok) {
+      const text = await createLeadResp.text()
+      throw new Error(`Lead creation failed: ${createLeadResp.status} ${text}`)
+    }
+
+    const createdLead = await createLeadResp.json()
+
+    // Phase 2/3: Trigger follow-up email via internal email automation API
+    await fetch(`${origin}/api/v1/zoho/email-automation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'trigger_email',
+        event: 'lead_captured',
+        clientData: {
+          email: leadData.Email,
+          firstName: leadData.Single_Line,
+          lastName: leadData.Single_Line1,
+          serviceType: leadData.Dropdown,
+          leadId: createdLead?.data?.id || createdLead?.data?.Lead_Id || null
+        }
+      })
+    })
+
+    // Optional: Phase 3 extension – auto book interview if requested
+    if (leadData.automation_trigger === 'book_interview') {
+      try {
+        await fetch(`${origin}/api/v1/zoho/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'book_appointment',
+            service_id: leadData?.Dropdown1 || 'interview_service',
+            client_id: createdLead?.data?.id || createdLead?.data?.Lead_Id || 'lead_temp',
+            appointment_date: leadData?.Date || new Date().toISOString().slice(0, 10),
+            start_time: '10:00',
+            notes: `Auto-interview booking for ${leadData.Email}`
+          })
         })
-      }
-    )
-
-    if (!zohoFormsResponse.ok) {
-      throw new Error(`Zoho Forms API error: ${zohoFormsResponse.status}`)
-    }
-
-    const formsResult = await zohoFormsResponse.json()
-
-    // Step 2: Trigger Zoho Flow automation for CRM integration
-    if (leadData.zoho_crm_integration) {
-      const flowTriggerResponse = await fetch(
-        `${process.env.ZOHO_FLOW_WEBHOOK_URL}/lead-capture-crm-integration`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.ZOHO_FLOW_API_KEY}`
-          },
-          body: JSON.stringify({
-            form_entry_id: formsResult.data.ID,
-            lead_data: {
-              first_name: leadData.Single_Line,
-              last_name: leadData.Single_Line1,
-              email: leadData.Email,
-              phone: leadData.Phone_Number,
-              due_date: leadData.Date,
-              service_type: leadData.Dropdown,
-              location: leadData.Single_Line2,
-              urgency: leadData.Dropdown2,
-              lead_source: leadData.Dropdown1,
-              notes: leadData.Multi_Line
-            },
-            workflow_stage: leadData.client_journey_stage || "initial_inquiry",
-            automation_trigger: leadData.automation_trigger,
-            timestamp: new Date().toISOString()
-          })
-        }
-      )
-
-      if (!flowTriggerResponse.ok) {
-        console.error("Zoho Flow trigger failed:", await flowTriggerResponse.text())
-      }
-    }
-
-    // Step 3: Trigger Zoho Campaigns automation
-    if (leadData.zoho_campaigns_trigger && leadData.Checkbox) {
-      const campaignsResponse = await fetch(
-        `${process.env.ZOHO_CAMPAIGNS_API_URL}/api/v1.1/addcontacts`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Zoho-oauthtoken ${process.env.ZOHO_CAMPAIGNS_ACCESS_TOKEN}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            listkey: process.env.ZOHO_CAMPAIGNS_LEAD_LIST_ID,
-            contactinfo: JSON.stringify([{
-              Contact_Email: leadData.Email,
-              First_Name: leadData.Single_Line,
-              Last_Name: leadData.Single_Line1,
-              Phone_Number: leadData.Phone_Number,
-              Service_Type: leadData.Dropdown,
-              Lead_Source: leadData.Dropdown1,
-              Urgency: leadData.Dropdown2,
-              Location: leadData.Single_Line2,
-              Pregnancy_Week: leadData.Number,
-              Due_Date: leadData.Date,
-              Lead_Capture_Date: new Date().toISOString()
-            }])
-          })
-        }
-      )
-
-      if (!campaignsResponse.ok) {
-        console.error("Zoho Campaigns integration failed:", await campaignsResponse.text())
+      } catch (e) {
+        console.warn('Auto booking skipped:', e)
       }
     }
 
@@ -209,25 +172,24 @@ export async function POST(request: NextRequest) {
       origin,
       request_id: requestId,
       data: {
-        zoho_form_id: formsResult.data.ID,
+        zoho_form_id: createdLead?.data?.id || createdLead?.data?.Lead_Id || null,
         email: leadData.Email,
         service_type: leadData.Dropdown,
         workflow_triggered: leadData.zoho_crm_integration
       }
     })
 
-    return NextResponse.json({
-      success: true,
+    return respond.ok({
       message: "Lead captured successfully and workflows triggered",
       data: {
-        zoho_form_id: formsResult.data.ID,
         status: "processing",
         next_steps: [
           "CRM lead record created",
           "Email confirmation sent",
           "Intake workflow initiated"
         ],
-        estimated_response_time: "24 hours"
+        estimated_response_time: "24 hours",
+        lead_id: createdLead?.data?.id || createdLead?.data?.Lead_Id || null
       },
       requestId
     })
@@ -247,20 +209,17 @@ export async function POST(request: NextRequest) {
       error_message: error instanceof Error ? error.message : "Unknown error"
     })
 
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: "Failed to process lead capture",
-        message: "We're experiencing technical difficulties. Please try again or call us directly."
-      },
-      { status: 500 }
+    return respond.serverError(
+      "Failed to process lead capture",
+      "lead_capture_failed",
+      { details: error instanceof Error ? error.message : String(error) }
     )
   }
 }
 
 // Handle preflight requests
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
+  return new Response(null, {
     status: 200,
     headers: {
       "Access-Control-Allow-Origin": "*",

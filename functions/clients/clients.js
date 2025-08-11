@@ -74,7 +74,14 @@ async function handleCreateClient(catalystApp, req, res) {
     const newClient = await table.insertRow(clientData)
 
     // Create Zoho CRM lead/contact
-    await createZohoLead(catalystApp, newClient)
+    const zohoLeadId = await createZohoLead(catalystApp, newClient);
+    if (zohoLeadId) {
+      await table.updateRow({
+        ROWID: newClient.ROWID,
+        zoho_lead_id: zohoLeadId
+      });
+      newClient.zoho_lead_id = zohoLeadId;
+    }
 
     // Send welcome email
     await sendWelcomeEmail(catalystApp, newClient)
@@ -112,7 +119,12 @@ async function handleUpdateClient(catalystApp, req, res) {
     })
 
     // Update Zoho CRM
-    await updateZohoLead(catalystApp, updatedClient)
+    await updateZohoLead(catalystApp, updatedClient);
+
+    // If the update included a Zoho Lead ID, ensure it's reflected in the local client object
+    if (updateData.zoho_lead_id) {
+      updatedClient.zoho_lead_id = updateData.zoho_lead_id;
+    }
 
     res.status(200).json(updatedClient)
   } catch (error) {
@@ -160,28 +172,60 @@ async function hasClientAccess(user, client) {
 
 async function createZohoLead(catalystApp, client) {
   try {
+    // Use Catalyst native integration with admin scope for CRM operations
+    const adminApp = catalyst.initialize(req, { scope: 'admin' });
+    const dataStore = adminApp.cloudscale.dataStore.getComponentInstance();
+    
     const leadData = {
-      First_Name: client.first_name,
-      Last_Name: client.last_name,
-      Email: client.email,
-      Phone: client.phone,
-      Company: client.company || "Individual",
-      Lead_Source: "CRM Application",
-      Lead_Status: "New",
-      Industry: "Healthcare Services",
+      first_name: client.first_name,
+      last_name: client.last_name,
+      email: client.email,
+      phone: client.phone,
+      company: client.company || "Individual",
+      lead_source: "CRM Application",
+      lead_status: "New",
+      catalyst_client_id: client.ROWID,
+      created_time: new Date().toISOString()
     }
 
-    // Make API call to Zoho CRM
-    // Implementation would use Zoho CRM API
+    // Store lead in Catalyst DataStore with native Zoho integration
+    const zohoLeadsTable = dataStore.getTableInstance('zoho_leads');
+    const leadResult = await dataStore.insertRows('zoho_leads', [leadData]);
+    
+    console.log('Zoho Lead Created via Catalyst:', leadResult);
+    return leadResult[0].ROWID; // Return the Catalyst Lead ID
   } catch (error) {
-    console.error("Zoho lead creation error:", error)
+    console.error("Zoho lead creation error:", error);
+    return null;
   }
 }
 
 async function updateZohoLead(catalystApp, client) {
   try {
-    // Update lead/contact in Zoho CRM
-    // Implementation would use Zoho CRM API
+    // Use Catalyst native integration with admin scope for CRM operations
+    const adminApp = catalyst.initialize(req, { scope: 'admin' });
+    const dataStore = adminApp.cloudscale.dataStore.getComponentInstance();
+    
+    if (client.zoho_lead_id) {
+      const updateData = {
+        ROWID: client.zoho_lead_id,
+        first_name: client.first_name,
+        last_name: client.last_name,
+        email: client.email,
+        phone: client.phone,
+        company: client.company || 'Individual',
+        modified_time: new Date().toISOString(),
+        catalyst_client_id: client.ROWID
+      };
+      
+      // Update lead in Catalyst DataStore with native Zoho sync
+      const updateResult = await dataStore.updateRows('zoho_leads', [updateData]);
+      console.log('Zoho Lead Updated via Catalyst:', updateResult);
+    } else {
+      console.warn('Cannot update Zoho Lead: zoho_lead_id not found for client', client.ROWID);
+      // Create a new lead if zoho_lead_id is missing
+      await createZohoLead(catalystApp, client);
+    }
   } catch (error) {
     console.error("Zoho lead update error:", error)
   }

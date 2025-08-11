@@ -1,0 +1,55 @@
+# AppSail Production Dockerfile for Next.js
+# Multi-stage build: builder + runner
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Configure environment
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+
+# System deps
+RUN apk add --no-cache \
+    libc6-compat \
+    python3 \
+    make \
+    g++
+
+# Install pnpm
+RUN npm i -g pnpm@9
+
+# Copy manifests and install deps
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm fetch --prod && pnpm install --offline --frozen-lockfile
+
+# Copy source
+COPY . .
+
+# Build Next.js (standalone output)
+ENV NEXT_SHARP_PATH=/app/node_modules/sharp
+RUN pnpm build
+
+# --- Runner image ---
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=5369 \
+    HOSTNAME=0.0.0.0
+
+# Minimal deps for runtime
+RUN apk add --no-cache libc6-compat
+
+# Copy only necessary runtime artifacts
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone .
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# Healthcheck (expects /api/health to exist)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT||5369) + '/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+
+EXPOSE 5369
+# AppSail will set PORT; use it if provided
+CMD ["node", "server.js"]

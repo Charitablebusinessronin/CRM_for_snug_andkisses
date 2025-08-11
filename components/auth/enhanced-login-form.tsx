@@ -150,7 +150,7 @@ export function EnhancedLoginForm() {
           <div className="flex items-center justify-center gap-2 mb-4">
             <Heart className="h-8 w-8 text-[#3B2352]" />
             <span className="text-2xl font-bold text-[#3B2352]" style={{ fontFamily: "Merriweather, serif" }}>
-              Snugs & Kisses
+              Snug & Kisses
             </span>
           </div>
           <CardTitle style={{ fontFamily: "Merriweather, serif" }}>Welcome Back</CardTitle>

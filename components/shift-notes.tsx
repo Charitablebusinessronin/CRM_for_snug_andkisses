@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, Upload, CheckCircle, Loader2, Save } from "lucide-react"
+import { Calendar, Clock, Upload, CheckCircle, Loader2, Save, FileText } from "lucide-react"
 
 /**
  * The main component for managing shift notes.
@@ -29,35 +30,35 @@ export function ShiftNotes() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  
-  const [shiftNotes] = useState([
-    {
-      id: 1,
-      client: "Sarah M.",
-      date: "2024-01-10",
-      startTime: "9:00 AM",
-      endTime: "5:00 PM",
-      hours: 8,
-      type: "Postpartum",
-      status: "submitted",
-      notes:
-        "Baby had a good day with regular feeding schedule. Mom is recovering well and got some rest. Light housework completed including laundry and meal prep.",
-      activities: ["Newborn care", "Feeding support", "Light housework", "Emotional support"],
-    },
-    {
-      id: 2,
-      client: "Maria L.",
-      date: "2024-01-08",
-      startTime: "2:00 PM",
-      endTime: "11:00 PM",
-      hours: 9,
-      type: "Birth Support",
-      status: "approved",
-      notes:
-        "Attended birth at Midtown Hospital. Provided continuous support during 12-hour labor. Baby born healthy at 10:45 PM.",
-      activities: ["Labor support", "Comfort measures", "Advocacy", "Immediate postpartum care"],
-    },
-  ])
+  const [shiftNotes, setShiftNotes] = useState<any[]>([])
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false)
+
+  // Load existing shift notes on component mount
+  useEffect(() => {
+    loadShiftNotes()
+  }, [])
+
+  const loadShiftNotes = async () => {
+    setIsLoadingNotes(true)
+    try {
+      const response = await fetch('/api/v1/shift-notes?contractor_id=contractor_001')
+      const result = await response.json()
+      
+      if (result.success) {
+        setShiftNotes(result.data || [])
+      } else {
+        toast.error('Failed to load shift notes: ' + (result.error || 'Unknown error'))
+        // Fallback to empty array - API will provide mock data
+        setShiftNotes([])
+      }
+    } catch (error) {
+      console.error('Error loading shift notes:', error)
+      toast.error('Error loading shift notes')
+      setShiftNotes([])
+    } finally {
+      setIsLoadingNotes(false)
+    }
+  }
 
   // Handle form input changes
   const handleInputChange = (field: string, value: string) => {
@@ -108,6 +109,8 @@ export function ShiftNotes() {
 
       if (result.success) {
         setSubmitStatus('success')
+        toast.success('Shift note submitted successfully!')
+        
         // Reset form
         setFormData({
           client: '',
@@ -119,6 +122,9 @@ export function ShiftNotes() {
           notes: '',
           signature: null
         })
+        
+        // Refresh the notes list
+        loadShiftNotes()
       } else {
         throw new Error(result.error || 'Failed to submit shift note')
       }
@@ -238,8 +244,43 @@ export function ShiftNotes() {
             <div className="border-2 border-dashed border-[#D7C7ED] rounded-lg p-6 text-center">
               <Upload className="h-8 w-8 text-[#3B2352] mx-auto mb-2" />
               <p className="text-sm text-gray-600">Upload signed shift confirmation (PDF or image)</p>
-              <Button variant="outline" className="mt-2 border-[#3B2352] text-[#3B2352]">
-                Choose File
+              <Button 
+                variant="outline" 
+                className="mt-2 border-[#3B2352] text-[#3B2352]"
+                onClick={() => {
+                  const input = document.createElement('input')
+                  input.type = 'file'
+                  input.accept = '.pdf,.jpg,.jpeg,.png,.gif'
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0]
+                    if (!file) return
+                    
+                    const formData = new FormData()
+                    formData.append('file', file)
+                    formData.append('type', 'document')
+                    formData.append('user_id', 'contractor_001')
+                    
+                    try {
+                      const response = await fetch('/api/v1/file-upload', {
+                        method: 'POST',
+                        body: formData
+                      })
+                      const result = await response.json()
+                      if (result.success) {
+                        setFormData(prev => ({ ...prev, signature: file }))
+                        toast.success(`Signature file "${file.name}" uploaded successfully!`)
+                      } else {
+                        toast.error(`Failed to upload signature: ${result.error}`)
+                      }
+                    } catch (error) {
+                      toast.error('Error uploading signature file')
+                    }
+                  }
+                  input.click()
+                }}
+                disabled={isSubmitting}
+              >
+                {formData.signature ? `Selected: ${formData.signature.name}` : 'Choose File'}
               </Button>
             </div>
           </div>
@@ -285,7 +326,18 @@ export function ShiftNotes() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {shiftNotes.map((note) => (
+            {isLoadingNotes ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                <p className="text-gray-600">Loading shift notes...</p>
+              </div>
+            ) : shiftNotes.length === 0 ? (
+              <div className="text-center py-8 text-gray-600">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <p>No shift notes found. Submit your first shift note above!</p>
+              </div>
+            ) : (
+              shiftNotes.map((note) => (
               <Card key={note.id} className="border-[#D7C7ED]/50">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -329,7 +381,7 @@ export function ShiftNotes() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )))}
           </div>
         </CardContent>
       </Card>

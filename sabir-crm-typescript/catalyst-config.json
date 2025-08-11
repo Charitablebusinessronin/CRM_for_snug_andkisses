@@ -1,0 +1,44 @@
+{
+  "type": "advancedio",
+  "runtime": "nodejs18",
+  "handler": "dist/index.js",
+  "buildScript": "npm run build",
+  "memory": 512,
+  "timeout": 30,
+  "environment": {
+    "NODE_ENV": "production",
+    "ZOHO_ENVIRONMENT": "production",
+    "ZOHO_DOMAIN": "com"
+  },
+  "permissions": {
+    "datastore": ["read", "write"],
+    "cache": ["read", "write"],
+    "circuit": ["read"],
+    "file": ["read", "write"]
+  },
+  "triggers": [
+    {
+      "type": "cron",
+      "expression": "0 0 * * *",
+      "description": "Daily maintenance tasks"
+    }
+  ],
+  "vpc": {
+    "enabled": false
+  },
+  "healthCheck": {
+    "path": "/health",
+    "method": "GET",
+    "timeout": 5
+  },
+  "scaling": {
+    "minInstances": 1,
+    "maxInstances": 10,
+    "scaleUpCooldown": 60,
+    "scaleDownCooldown": 300
+  },
+  "monitoring": {
+    "enabled": true,
+    "metricsRetention": "7d"
+  }
+}

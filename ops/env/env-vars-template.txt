@@ -1,0 +1,32 @@
+# Catalyst Configuration (from .catalystrc and catalyst.json)
+NEXT_PUBLIC_CATALYST_PROJECT_ID=30300000000011038
+NEXT_PUBLIC_CATALYST_ENV_ID=891140386
+NEXT_PUBLIC_CATALYST_API_KEY=your_api_key_here
+NEXT_PUBLIC_CATALYST_DOMAIN=project-rainfall-891140386.development.catalystserverless.com
+
+# Zoho Configuration (Client-side)
+NEXT_PUBLIC_ZOHO_CLIENT_ID=your_client_id_here
+
+# Zoho Configuration (Server-side - DO NOT expose to client)
+ZOHO_CLIENT_ID=your_client_id_here
+ZOHO_CLIENT_SECRET=your_client_secret_here
+ZOHO_REFRESH_TOKEN=your_refresh_token_here
+
+# Application Configuration
+NEXT_PUBLIC_APP_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# API Configuration
+NEXT_PUBLIC_API_URL=your_api_url_here
+NEXT_PUBLIC_CATALYST_CRM_URL=your_catalyst_crm_url_here
+
+# Server (Function) Configuration
+# Catalyst function URL used by Next.js proxies (container-to-container)
+CONTRACT_FN_URL=http://express-backend:9000/server/project_rainfall_function
+# Zoho OAuth access token (server-side). Provide via secure secret store.
+ZOHO_OAUTH_TOKEN=your_runtime_access_token_here
+# Optional base URLs (default to production endpoints if omitted)
+ZOHO_SIGN_BASE_URL=https://sign.zoho.com/api/v1
+ZOHO_CRM_BASE_URL=https://www.zohoapis.com/crm/v3
+# Webhook signature secret for Zoho Sign callbacks
+ZOHO_SIGN_WEBHOOK_SECRET=replace_with_random_32_bytes_hex

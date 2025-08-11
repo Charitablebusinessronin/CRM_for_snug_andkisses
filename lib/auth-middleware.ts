@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { jwtVerify } from "jose"
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your-secret-key-change-in-production"
-)
+import { secureTokenManager } from "@/lib/secure-token-manager"
 
 /**
  * Authentication middleware for route protection
@@ -43,15 +39,17 @@ export async function authMiddleware(request: NextRequest) {
   }
 
   try {
-    // Verify JWT token
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    const userRole = payload.role as string
+    // Verify RS256 JWT access token
+    const payload = secureTokenManager.verifyAccessToken(token)
+    if (!payload) throw new Error("Invalid token")
+    const userRole = (payload.role as string).toLowerCase()
 
     // Role-based route protection
     const roleRoutes = {
       admin: ["/admin"],
       employee: ["/employee"],
-      contractor: ["/contractor"]
+      contractor: ["/contractor"],
+      client: ["/client"],
     }
 
     // Check if user has access to the requested route
@@ -66,17 +64,17 @@ export async function authMiddleware(request: NextRequest) {
       // Redirect to appropriate dashboard based on role
       const dashboardUrl = userRole === "admin" ? "/admin/dashboard" :
                           userRole === "employee" ? "/employee/dashboard" :
-                          userRole === "contractor" ? "/contractor/dashboard" : "/login"
+                          userRole === "contractor" ? "/contractor/dashboard" :
+                          userRole === "client" ? "/client/dashboard" : "/login"
       
       return NextResponse.redirect(new URL(dashboardUrl, request.url))
     }
 
     // Add user info to request headers for API routes
     const response = NextResponse.next()
-    response.headers.set("x-user-id", payload.sub as string)
+    response.headers.set("x-user-id", payload.userId as string)
     response.headers.set("x-user-role", userRole)
-    response.headers.set("x-user-email", payload.email as string)
-
+    
     return response
 
   } catch (error) {
@@ -108,15 +106,16 @@ export async function verifyAuthToken(request: NextRequest) {
       return { valid: false, error: "No token provided" }
     }
 
-    // Verify JWT token
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    
+    // Verify RS256 JWT token via SecureTokenManager
+    const payload = secureTokenManager.verifyAccessToken(token)
+    if (!payload) {
+      return { valid: false, error: "Invalid token" }
+    }
+
     return {
       valid: true,
-      userId: payload.sub as string,
-      userName: payload.name as string,
+      userId: payload.userId as string,
       role: payload.role as string,
-      email: payload.email as string
     }
 
   } catch (error) {
