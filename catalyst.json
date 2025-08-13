@@ -3,31 +3,26 @@
   "project_name": "Project-Rainfall",
   "env_id": "891140386",
   "env_name": "Development",
-  "functions": [
-    {
-      "function_name": "crm-api",
-      "source": "functions/crm-api",
-      "entry_file": "index.js"
-    },
-    {
-      "function_name": "quick-actions",
-      "source": "functions/quick-actions",
-      "entry_file": "main.py"
-    },
-    {
-      "function_name": "contact-manager",
-      "source": "functions/contact-manager",
-      "entry_file": "main.py"
-    },
-    {
-      "function_name": "analytics-engine",
-      "source": "functions/analytics-engine",
-      "entry_file": "main.py"
-    },
-    {
-      "function_name": "lead-processor",
-      "source": "functions/lead-processor",
-      "entry_file": "main.py"
-    }
-  ]
+  "functions": {
+    "targets": [
+      {
+        "function_name": "custom-user-validation",
+        "source": "functions/custom-user-validation-node",
+        "entry_file": "index.js"
+      }
+    ]
+  },
+  "appsail": {
+    "targets": [
+      {
+        "service_name": "snug-kisses-crm",
+        "source": ".",
+        "build_command": "npm run build",
+        "run_command": "npm start",
+        "port": 3000,
+        "host": "0.0.0.0",
+        "dockerfile": "Dockerfile.appsail"
+      }
+    ]
+  }
 }

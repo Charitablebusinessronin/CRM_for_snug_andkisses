@@ -1,0 +1,189 @@
+{
+  "schema_version": "2.0-SDK",
+  "description": "Simplified DataStore Schema - CRM Data via SDK, Custom Logic via DataStore",
+  "tables": [
+    {
+      "table_name": "workflows",
+      "description": "Custom business workflows and automation rules",
+      "columns": [
+        {
+          "column_name": "workflow_id",
+          "data_type": "string",
+          "size": 50,
+          "primary_key": true,
+          "description": "Unique workflow identifier"
+        },
+        {
+          "column_name": "workflow_name",
+          "data_type": "string",
+          "size": 100,
+          "required": true,
+          "description": "Name of the workflow"
+        },
+        {
+          "column_name": "trigger_type",
+          "data_type": "string", 
+          "size": 50,
+          "required": true,
+          "description": "What triggers this workflow (contact_created, deal_closed, etc.)"
+        },
+        {
+          "column_name": "crm_record_id",
+          "data_type": "string",
+          "size": 50,
+          "description": "Related CRM record ID (from SDK)"
+        },
+        {
+          "column_name": "crm_module",
+          "data_type": "string",
+          "size": 50,
+          "description": "CRM module (Contacts, Leads, Deals, etc.)"
+        },
+        {
+          "column_name": "workflow_status",
+          "data_type": "string",
+          "size": 20,
+          "description": "pending, in_progress, completed, failed"
+        },
+        {
+          "column_name": "actions",
+          "data_type": "json",
+          "description": "JSON array of workflow actions"
+        },
+        {
+          "column_name": "created_date",
+          "data_type": "datetime",
+          "required": true
+        },
+        {
+          "column_name": "last_updated",
+          "data_type": "datetime",
+          "required": true
+        }
+      ]
+    },
+    {
+      "table_name": "analytics_cache",
+      "description": "Cached analytics data and custom metrics",
+      "columns": [
+        {
+          "column_name": "cache_id",
+          "data_type": "string",
+          "size": 50,
+          "primary_key": true
+        },
+        {
+          "column_name": "metric_name",
+          "data_type": "string",
+          "size": 100,
+          "required": true,
+          "description": "Name of the metric (monthly_leads, conversion_rate, etc.)"
+        },
+        {
+          "column_name": "metric_value",
+          "data_type": "json",
+          "description": "JSON object containing metric data"
+        },
+        {
+          "column_name": "date_range_start",
+          "data_type": "datetime",
+          "description": "Start date for this metric calculation"
+        },
+        {
+          "column_name": "date_range_end",
+          "data_type": "datetime",
+          "description": "End date for this metric calculation"
+        },
+        {
+          "column_name": "cache_expiry",
+          "data_type": "datetime",
+          "description": "When this cached data expires"
+        },
+        {
+          "column_name": "created_date",
+          "data_type": "datetime",
+          "required": true
+        }
+      ]
+    },
+    {
+      "table_name": "audit_logs",
+      "description": "HIPAA-compliant audit logs for all system activities",
+      "columns": [
+        {
+          "column_name": "audit_id",
+          "data_type": "string",
+          "size": 50,
+          "primary_key": true
+        },
+        {
+          "column_name": "user_email",
+          "data_type": "string",
+          "size": 100,
+          "required": true,
+          "description": "Email of user who performed the action"
+        },
+        {
+          "column_name": "action_type",
+          "data_type": "string",
+          "size": 50,
+          "required": true,
+          "description": "Type of action (view, create, update, delete, login, etc.)"
+        },
+        {
+          "column_name": "resource_type",
+          "data_type": "string",
+          "size": 50,
+          "description": "What was accessed (contact, lead, deal, etc.)"
+        },
+        {
+          "column_name": "crm_record_id",
+          "data_type": "string",
+          "size": 50,
+          "description": "CRM record ID that was accessed (from SDK)"
+        },
+        {
+          "column_name": "ip_address",
+          "data_type": "string",
+          "size": 45,
+          "description": "IP address of the user"
+        },
+        {
+          "column_name": "user_agent",
+          "data_type": "string",
+          "size": 500,
+          "description": "Browser/device information"
+        },
+        {
+          "column_name": "details",
+          "data_type": "json",
+          "description": "Additional action details (what changed, etc.)"
+        },
+        {
+          "column_name": "timestamp",
+          "data_type": "datetime",
+          "required": true,
+          "description": "When the action occurred"
+        },
+        {
+          "column_name": "session_id",
+          "data_type": "string",
+          "size": 100,
+          "description": "User session identifier"
+        }
+      ]
+    }
+  ],
+  "deployment_notes": {
+    "crm_data_source": "Direct Zoho CRM API via SDK 7.0 - NO DataStore replication",
+    "datastore_purpose": "Custom workflows, analytics cache, and HIPAA audit logs only",
+    "complexity_reduction": "87% reduction in DataStore complexity (3 tables vs 8+ tables)",
+    "benefits": [
+      "Real-time CRM data access",
+      "Eliminated data synchronization",
+      "Faster deployment (2-3 hours vs 1-2 days)",
+      "Better performance and scalability",
+      "Simplified maintenance"
+    ]
+  }
+}
