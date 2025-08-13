@@ -1,14 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'ALLOWFROM replit.com'
+          }
+        ]
+      }
+    ]
   },
-  typescript: {
-    ignoreBuildErrors: true,
+  experimental: {
+    serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken']
   },
-  images: {
-    unoptimized: true,
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;
