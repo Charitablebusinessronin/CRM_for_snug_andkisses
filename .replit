@@ -22,3 +22,24 @@ args = "npm install"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Deploy to Catalyst"
+author = 46226767
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/deployment-validator.js"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/catalyst-deploy-sequence.js"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/integration-test-suite.js"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
