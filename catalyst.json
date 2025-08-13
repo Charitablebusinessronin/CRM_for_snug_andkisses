@@ -9,13 +9,14 @@
   "services": {
     "appsail": {
       "enabled": true,
-      "service_name": "snug-kisses-backend",
+      "service_name": "snug-kisses-unified-backend",
       "source": {
         "path": "./",
         "build_command": "npm run build",
         "run_command": "npm start"
       },
-      "port": 5000
+      "port": 5000,
+      "host": "0.0.0.0"
     },
     "datastore": {
       "enabled": true,
