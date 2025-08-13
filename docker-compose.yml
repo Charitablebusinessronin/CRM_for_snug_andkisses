@@ -59,7 +59,11 @@ services:
       
       # Network configuration
       FRONTEND_URL: http://frontend:5369
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5369,http://localhost:4728}
+
+      # Support contact info
+      SUPPORT_PHONE: ${SUPPORT_PHONE:-+1-000-000-0000}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-support@snugsandkissesds.com}
       
       # Catalyst configuration
       CATALYST_PROJECT_ID: ${CATALYST_PROJECT_ID}

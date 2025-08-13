@@ -1,0 +1,13 @@
+{
+  "name": "zia-intelligence",
+  "type": "advancedio",
+  "runtime": "python3",
+  "handler": "main.handler",
+  "source": "main.py",
+  "memory": 512,
+  "timeout": 60,
+  "deployment": { "stack": "python3" },
+  "environment_variables": {
+    "LOG_LEVEL": "info"
+  }
+}

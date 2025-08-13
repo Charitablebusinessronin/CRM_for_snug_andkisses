@@ -1,0 +1,12 @@
+{
+  "name": "sabir-crm-api",
+  "version": "1.0.0",
+  "description": "Sabir's CRM API - Basic I/O Function for Catalyst",
+  "main": "index.js",
+  "dependencies": {
+    "zcatalyst-sdk-node": "latest"
+  },
+  "keywords": ["crm", "healthcare", "hipaa", "zoho", "catalyst"],
+  "author": "Sabir Asheed",
+  "license": "UNLICENSED"
+}

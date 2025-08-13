@@ -89,6 +89,71 @@ class ZohoUnifiedService {
     }
   }
 
+  // --- Generic CRM helpers ---
+  async getCRMRecord(moduleAPIName: string, recordId: string): Promise<any> {
+    if (!this.initialized) await this.initialize();
+    if (!this.crmSDK) throw new Error('CRM SDK not available');
+    try {
+      const response = await this.crmSDK.record.getRecordById({ moduleAPIName, id: recordId });
+      return (response as any)?.data?.[0] || null;
+    } catch (error) {
+      logger.error({ error, moduleAPIName, recordId }, 'Error fetching CRM record');
+      throw error;
+    }
+  }
+
+  async createCRMRecord(moduleAPIName: string, data: Record<string, any>): Promise<any> {
+    if (!this.initialized) await this.initialize();
+    if (!this.crmSDK) throw new Error('CRM SDK not available');
+    try {
+      const response = await this.crmSDK.record.createRecords({ moduleAPIName, body: { data: [data] } });
+      return (response as any)?.data?.[0];
+    } catch (error) {
+      logger.error({ error, moduleAPIName }, 'Error creating CRM record');
+      throw error;
+    }
+  }
+
+  // --- Books helpers (best-effort wrappers) ---
+  async getCustomer(customerId: string): Promise<any> {
+    if (!this.initialized) await this.initialize();
+    if (!this.booksSDK) throw new Error('Books SDK not available');
+    return this.booksSDK.getCustomer(customerId);
+  }
+
+  async getInvoices(params: { customerId: string; status?: string }): Promise<any[]> {
+    if (!this.initialized) await this.initialize();
+    if (!this.booksSDK) throw new Error('Books SDK not available');
+    return this.booksSDK.getInvoices(params);
+  }
+
+  async getPaymentMethods(customerId: string): Promise<any[]> {
+    if (!this.initialized) await this.initialize();
+    if (!this.booksSDK) throw new Error('Books SDK not available');
+    return this.booksSDK.getPaymentMethods(customerId);
+  }
+
+  async createPayment(payload: any): Promise<any> {
+    if (!this.initialized) await this.initialize();
+    if (!this.booksSDK) throw new Error('Books SDK not available');
+    return this.booksSDK.createPayment(payload);
+  }
+
+  async updateInvoiceStatus(invoiceId: string, status: string): Promise<any> {
+    if (!this.initialized) await this.initialize();
+    if (!this.booksSDK) throw new Error('Books SDK not available');
+    return this.booksSDK.updateInvoiceStatus(invoiceId, status);
+  }
+
+  // --- Notifications (stubbed) ---
+  async sendNotification(payload: any): Promise<void> {
+    logger.info({ payload }, 'sendNotification (stub)');
+  }
+
+  async sendUrgentNotification(payload: any): Promise<void> {
+    logger.info({ payload }, 'sendUrgentNotification (stub)');
+  }
+
   async getHealthStatus(): Promise<{ crm: boolean; books: boolean; catalyst: boolean }> {
     return { crm: !!this.crmSDK, books: !!this.booksSDK, catalyst: !!this.catalystApp };
   }

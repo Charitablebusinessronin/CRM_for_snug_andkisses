@@ -5,6 +5,10 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev --turbo",
+    "dev:fe:3005": "next dev -p 3005 --turbo",
+    "dev:be:3006:win": "set PORT=3006&& npm run ts:dev",
+    "dev:be:3006:nix": "PORT=3006 npm run ts:dev",
+    "dev:3005-3006": "concurrently -k -n FE,BE -c green,blue \"npm run dev:fe:3005\" \"npm run dev:be:3006:win\"",
     "lint": "next lint",
     "start": "next start",
     "type-check": "tsc --noEmit",
@@ -24,7 +28,7 @@
     "docker:health": "curl -f http://localhost:5369/api/health && curl -f http://localhost:4728/health"
   },
   "dependencies": {
-    "@auth/core": "^0.37.2",
+    "@auth/core": "0.34.2",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -98,6 +102,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "@next/bundle-analyzer": "^15.1.0",
     "@playwright/test": "^1.46.0",
     "@types/bcryptjs": "^2.4.6",

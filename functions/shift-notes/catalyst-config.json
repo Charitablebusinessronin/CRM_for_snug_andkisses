@@ -1,0 +1,15 @@
+{
+  "name": "shift-notes",
+  "type": "basicio",
+  "runtime": "node18",
+  "deployment": {
+    "stack": "node"
+  },
+  "handler": "shift-notes",
+  "source": "shift-notes.js",
+  "memory": 512,
+  "timeout": 60,
+  "environment_variables": {
+    "LOG_LEVEL": "info"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "crm-api",
+  "type": "basicio",
+  "runtime": "node18",
+  "deployment": {
+    "stack": "node"
+  },
+  "handler": "crm-api",
+  "source": "index.js",
+  "memory": 1024,
+  "timeout": 300,
+  "environment_variables": {
+    "NODE_ENV": "production",
+    "LOG_LEVEL": "info",
+    "HIPAA_AUDIT_LOGGING": "true"
+  },
+  "description": "Sabir's CRM API - Basic I/O Function with HIPAA compliance"
+}

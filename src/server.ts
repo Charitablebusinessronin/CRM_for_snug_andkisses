@@ -9,6 +9,7 @@ import { authRoutes } from './routes/auth';
 import { contactRoutes } from './routes/contacts';
 import { leadRoutes } from './routes/leads';
 import { zohoRoutes } from './routes/zoho';
+import { portalRoutes } from './routes/portal';
 
 const app = express();
 const PORT = envConfig.PORT || 4728;
@@ -17,7 +18,7 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? envConfig.ALLOWED_ORIGINS?.split(',')
-    : ['http://localhost:3000', 'http://localhost:4728'],
+    : ['http://localhost:3000', 'http://localhost:4728', 'http://localhost:3005'],
   credentials: true
 }));
 
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/zoho', zohoRoutes);
+app.use('/api/portal', portalRoutes);
 
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
@@ -59,7 +61,18 @@ app.get('/api', (_req: Request, res: Response) => {
       'POST /api/contacts - Create contact',
       'GET /api/leads - List leads',
       'POST /api/leads - Create lead',
-      'GET /api/zoho/sync - Sync status'
+      'GET /api/zoho/sync - Sync status',
+      'POST /api/portal/urgent-care - Create urgent care ticket',
+      'POST /api/portal/contact-provider - Contact assigned provider',
+      'POST /api/portal/schedule - Schedule appointment',
+      'POST /api/portal/message - Send secure message',
+      'POST /api/portal/video-call - Start video call',
+      'POST /api/portal/care-change - Request care changes',
+      'GET /api/portal/billing/info - Billing information',
+      'POST /api/portal/billing/pay - Make payment',
+      'GET /api/portal/resources/educational - Educational resources',
+      'GET /api/portal/resources/help - Help & support',
+      'GET /api/portal/dashboard - Client dashboard data'
     ]
   });
 });

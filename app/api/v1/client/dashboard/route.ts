@@ -1,177 +1,151 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-enhanced';
+import ZohoAuth from '@/lib/zoho/auth';
+import { booksHours } from '@/lib/zoho/books-hours';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== 'client') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Client access required' }, 
-        { status: 401 }
-      )
+    if (!session || session.user.role !== 'CLIENT') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Mock client dashboard data - replace with actual database queries
-    const dashboardData = {
-      client: {
-        id: session.user.id,
-        name: session.user.name || 'Client User',
-        email: session.user.email,
-        phone: '+1 (555) 123-4567',
-        memberSince: '2024-01-15',
-        hourBalance: 24.5
-      },
-      serviceRequests: [
-        {
-          id: '1',
-          type: 'Postpartum Care',
-          status: 'in-progress',
-          hoursAllocated: 40,
-          hoursUsed: 15.5,
-          startDate: '2024-02-01',
-          provider: {
-            name: 'Maria Rodriguez',
-            avatar: '/api/placeholder/avatar/1'
-          }
-        },
-        {
-          id: '2', 
-          type: 'Lactation Support',
-          status: 'completed',
-          hoursAllocated: 6,
-          hoursUsed: 6,
-          startDate: '2024-01-20',
-          provider: {
-            name: 'Jennifer Smith',
-            avatar: '/api/placeholder/avatar/2'
-          }
-        }
-      ],
-      hourTransactions: [
-        {
-          id: '1',
-          date: '2024-02-05',
-          hours: -4,
-          type: 'used',
-          description: 'Postpartum care session',
-          provider: 'Maria Rodriguez'
-        },
-        {
-          id: '2', 
-          date: '2024-02-01',
-          hours: 40,
-          type: 'purchased',
-          description: 'Initial hour package purchase'
-        },
-        {
-          id: '3',
-          date: '2024-01-25',
-          hours: -2,
-          type: 'used', 
-          description: 'Lactation consultation',
-          provider: 'Jennifer Smith'
-        }
-      ],
-      workflowPhases: [
-        {
-          id: 1,
-          name: 'Initial Inquiry',
-          status: 'completed',
-          description: 'Service request submitted and reviewed'
-        },
-        {
-          id: 2,
-          name: 'Consultation Scheduled',
-          status: 'completed', 
-          description: 'Initial consultation appointment confirmed'
-        },
-        {
-          id: 3,
-          name: 'Provider Matching',
-          status: 'completed',
-          description: 'Matched with qualified care provider'
-        },
-        {
-          id: 4,
-          name: 'Contract Signing',
-          status: 'current',
-          description: 'Review and sign service agreements',
-          dueDate: '2024-02-10'
-        },
-        {
-          id: 5,
-          name: 'Service Delivery',
-          status: 'pending',
-          description: 'Begin receiving care services'
-        }
-      ]
-    }
+    // Get client data from Zoho CRM
+    const clientData = await getClientData(session.user.id);
+    
+    // Calculate hour balance from Books/CRM
+    const hourBalance = await calculateHourBalance(clientData.zohoContactId || session.user.id);
+    
+    // Get active services from CRM
+    const activeServices = await getActiveServices(clientData.zohoContactId || session.user.id);
 
-    return NextResponse.json(dashboardData)
+    return NextResponse.json({
+      success: true,
+      client: clientData,
+      hourBalance,
+      activeServices,
+      recentActivity: await getRecentActivity(session.user.id),
+      upcomingAppointments: await getUpcomingAppointments(session.user.id)
+    });
 
-  } catch (error) {
-    console.error('Client dashboard API error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    )
+  } catch (error: any) {
+    console.error('Client dashboard error:', error);
+    
+    return NextResponse.json({
+      error: 'Failed to load dashboard data',
+      details: error.message
+    }, { status: 500 });
   }
 }
 
-// Purchase additional hours
-export async function POST(request: NextRequest) {
+async function getClientData(clientId: string) {
+  // Lookup Zoho Contact by external portal user id or email stored in session
+  // Fallback to mock shape if not found
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'client') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Client access required' }, 
-        { status: 401 }
-      )
-    }
-
-    const body = await request.json()
-    const { action, hours, paymentInfo } = body
-
-    if (action === 'purchase_hours') {
-      // Mock hour purchase logic - replace with actual payment processing
-      const transaction = {
-        id: `txn_${Date.now()}`,
-        clientId: session.user.id,
-        hours: parseInt(hours),
-        amount: parseInt(hours) * 50, // $50 per hour
-        paymentMethod: paymentInfo.method,
-        status: 'completed',
-        createdAt: new Date().toISOString()
+    const auth = new ZohoAuth()
+    const token = await auth.getAccessToken()
+    const crmBase = process.env.ZOHO_CRM_API_URL || 'https://www.zohoapis.com/crm/v2'
+    // Try search by External_Id (custom) equals clientId; adjust field as needed
+    const criteria = encodeURIComponent(`External_Id:equals:${clientId}`)
+    const res = await fetch(`${crmBase}/Contacts/search?criteria=${criteria}`, {
+      headers: { Authorization: `Zoho-oauthtoken ${token}` },
+      cache: 'no-store',
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const contact = data.data?.[0]
+      if (contact) {
+        return {
+          id: clientId,
+          zohoContactId: contact.id,
+          name: `${contact.First_Name || ''} ${contact.Last_Name || ''}`.trim() || 'Client',
+          email: contact.Email || 'client@example.com',
+          status: contact.Client_Status || 'Active',
+          joinDate: contact.Created_Time || new Date().toISOString(),
+        }
       }
-
-      // Here you would:
-      // 1. Process payment with Stripe/payment processor
-      // 2. Update client hour balance in database
-      // 3. Create transaction record
-      // 4. Send confirmation email
-      // 5. Log for HIPAA audit trail
-
-      return NextResponse.json({
-        success: true,
-        transaction,
-        newBalance: 24.5 + parseInt(hours), // Mock new balance
-        message: `Successfully purchased ${hours} hours`
-      })
     }
-
-    return NextResponse.json(
-      { error: 'Invalid action' }, 
-      { status: 400 }
-    )
-
-  } catch (error) {
-    console.error('Client dashboard POST error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    )
+  } catch {}
+  return {
+    id: clientId,
+    zohoContactId: undefined,
+    name: 'Client Name',
+    email: 'client@example.com',
+    status: 'Active',
+    joinDate: new Date().toISOString(),
   }
+}
+
+async function calculateHourBalance(zohoContactId: string) {
+  const hours = await booksHours.getClientServiceHours(zohoContactId)
+  return {
+    totalHours: hours.total,
+    usedHours: hours.used,
+    remainingHours: hours.remaining,
+    nextBillingCycle: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  }
+}
+
+async function getActiveServices(zohoContactId: string) {
+  try {
+    const auth = new ZohoAuth()
+    const token = await auth.getAccessToken()
+    const crmBase = process.env.ZOHO_CRM_API_URL || 'https://www.zohoapis.com/crm/v2'
+    // Assuming a custom module or Deals used as Services; filter open/in progress linked to contact
+    const criteria = encodeURIComponent(`(Contact_Name:equals:${zohoContactId}) and (Stage:in:Qualification,Negotiation,Implementation,Delivery)`)
+    const res = await fetch(`${crmBase}/Deals/search?criteria=${criteria}`, {
+      headers: { Authorization: `Zoho-oauthtoken ${token}` },
+      cache: 'no-store',
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return (data.data || []).map((d: any) => ({
+        id: d.id,
+        name: d.Deal_Name || d.Service_Type || 'Service',
+        type: 'ongoing',
+        startDate: d.Expected_Start_Date || d.Created_Time || new Date().toISOString(),
+        endDate: d.Expected_End_Date || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+        hoursAllocated: Number(d.Hours_Allocated || 0),
+        hoursUsed: Number(d.Hours_Used || 0),
+      }))
+    }
+  } catch {}
+  return []
+}
+
+async function getRecentActivity(clientId: string) {
+  // This would query Zoho CRM for recent activities
+  return [
+    {
+      id: 'activity_001',
+      type: 'appointment_scheduled',
+      description: 'Appointment scheduled for tomorrow',
+      timestamp: new Date().toISOString()
+    }
+  ];
+}
+
+async function getUpcomingAppointments(zohoContactId: string) {
+  try {
+    const auth = new ZohoAuth()
+    const token = await auth.getAccessToken()
+    const bookingsBase = process.env.ZOHO_BOOKINGS_API_URL || 'https://bookings.zoho.com/api/v1'
+    const res = await fetch(`${bookingsBase}/appointments?client_id=${encodeURIComponent(zohoContactId)}&status=scheduled`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return (data.appointments || []).map((a: any) => ({
+        id: a.id,
+        date: a.appointment_date,
+        time: a.start_time,
+        service: a.service_name || a.service_id,
+        provider: a.staff_name || a.staff_id,
+      }))
+    }
+  } catch {}
+  return []
 }

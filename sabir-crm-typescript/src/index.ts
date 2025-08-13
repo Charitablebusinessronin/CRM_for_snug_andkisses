@@ -13,6 +13,7 @@ import { zohoRoutes } from './routes/zoho';
 import { avatarRoutes } from './routes/avatars';
 import { analyticsRoutes } from './routes/analytics';
 import { quickActionsRoutes } from './routes/quickActions';
+import clientPortalRoutes from './routes/clientPortal';
 import { errorHandler } from './middleware/errorHandler';
 import { zohoSDK } from './services/ZohoUnifiedSDK';
 import { logger } from './utils/logger';
@@ -20,7 +21,7 @@ import { hipaaAuditMiddleware } from './middleware/hipaaAudit.middleware';
 
 // Express app with TypeScript
 const app = express();
-const PORT = process.env.PORT || 4728; // Sabir's preferred port
+const PORT = Number(process.env.X_ZOHO_CATALYST_LISTEN_PORT || process.env.PORT || 4729); // TypeScript CRM on dedicated port
 
 // Security middleware
 app.use(helmet({
@@ -48,7 +49,7 @@ app.use('/api/', limiter);
 // CORS configuration
 const defaultOrigins = [
   'http://localhost:3000',
-  'http://localhost:4728',
+  'http://localhost:4729',
   'http://localhost:5369',
   'http://frontend:3000' // docker compose service name for frontend
 ];
@@ -92,6 +93,8 @@ app.use('/api/zoho', zohoRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/quick-actions', quickActionsRoutes);
 app.use('/api/placeholder/avatar', avatarRoutes);
+// Client Portal routes
+app.use('/api/client', clientPortalRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -140,6 +143,40 @@ app.get('/api', (req: Request, res: Response) => {
         delete: 'DELETE /api/leads/:id'
       }
     }
+  });
+});
+
+// Root endpoint - API welcome page
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'Welcome to Sabir\'s TypeScript CRM API',
+    version: '1.0.0',
+    author: 'Sabir Asheed',
+    description: 'Healthcare CRM with HIPAA compliance and Zoho integration',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      documentation: '/api',
+      health: '/health',
+      auth: '/api/auth/*',
+      contacts: '/api/contacts/*',
+      leads: '/api/leads/*',
+      zoho: '/api/zoho/*',
+      analytics: '/api/analytics/*',
+      quickActions: '/api/quick-actions/*',
+      clientPortal: '/api/client/*'
+    },
+    features: [
+      'HIPAA Compliance',
+      'Zoho Integration',
+      'TypeScript Backend',
+      'Express.js API',
+      'JWT Authentication',
+      'Rate Limiting',
+      'CORS Support',
+      'Audit Logging'
+    ]
   });
 });
 

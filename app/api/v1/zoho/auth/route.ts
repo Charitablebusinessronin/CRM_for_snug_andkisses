@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
   if (!code) {
     // Use the correct redirect URI from your environment
-    const redirectUri = process.env.ZOHO_ONE_REDIRECT_URI || "http://localhost:3000/api/auth/callback/zoho"
+    const redirectUri = process.env.ZOHO_ONE_REDIRECT_URI || "http://localhost:5369/api/auth/callback/zoho"
     const clientId = process.env.ZOHO_ONE_CLIENT_ID || process.env.ZOHO_CLIENT_ID
 
     const authUrl =

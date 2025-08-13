@@ -24,11 +24,16 @@ import {
   Bell,
   HelpCircle,
   Activity,
-  Zap
+  Zap,
+  Users
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { useRouter } from 'next/navigation'
 import { formatDisplay } from '@/lib/date-utils'
+import { runQuickAction } from '@/lib/actions'
+import UnifiedActionButton from '@/components/UnifiedActionButton'
+
+const USE_UNIFIED = process.env.NEXT_PUBLIC_USE_UNIFIED_BUTTONS === 'true'
 
 interface QuickAction {
   id: string
@@ -137,6 +142,30 @@ export function ClientQuickActions({
    * Schedule appointment with AI optimization
    */
   const scheduleAppointment = async () => {
+    // Try unified quick action first
+    try {
+      const res = await runQuickAction<any>({ action: 'create-appointment', params: { clientId, type: 'consultation' } })
+      if (res.ok) {
+        const data: any = (res.json as any)?.data
+        const url = data?.bookingUrl || data?.appointmentUrl
+        if (url) {
+          try { window.open(url, '_blank', 'noopener,noreferrer') } catch {}
+        }
+        toast({
+          title: "Appointment Request Sent",
+          description: `Submitted at ${formatDisplay(new Date())}. We'll confirm your appointment shortly.`,
+        })
+        if (window.socket?.connected) {
+          window.socket.emit('client_portal_action', {
+            action: 'request_appointment',
+            data: { clientId, appointmentData: data?.suggestedTimes }
+          })
+        }
+        return data
+      }
+    } catch {}
+
+    // Fallback to existing endpoint
     const response = await fetch('/api/client/schedule-appointment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -151,17 +180,26 @@ export function ClientQuickActions({
       })
     })
 
+    if (response.status === 401) {
+      toast({ title: 'Please sign in', description: 'Your session expired. Sign in to schedule.' })
+      try { router.push('/auth/signin') } catch {}
+      return
+    }
     if (!response.ok) throw new Error('Failed to schedule appointment')
 
     const result = await response.json()
-    
+
     toast({
       title: "Appointment Request Sent",
       description: `Submitted at ${formatDisplay(new Date())}. We'll confirm your appointment shortly.`,
-      variant: "default"
     })
 
-    // Real-time update to care team
+    const bookingUrl = (result && (result.bookingUrl || result.appointmentUrl))
+    if (bookingUrl) {
+      try { window.open(bookingUrl, '_blank', 'noopener,noreferrer') } catch {}
+      toast({ title: 'Booking Link', description: bookingUrl })
+    }
+
     if (window.socket?.connected) {
       window.socket.emit('client_portal_action', {
         action: 'request_appointment',
@@ -233,6 +271,16 @@ export function ClientQuickActions({
    * Contact care provider directly
    */
   const contactProvider = async () => {
+    // Try unified quick action first (message team to call client)
+    try {
+      const res = await runQuickAction<any>({ action: 'messageTeam', params: { clientId, message: 'Please call me regarding my care plan.' } })
+      if (res.ok) {
+        toast({ title: 'Provider Contacted', description: 'Your care provider has been notified and will call you shortly.' })
+        return (res.json as any)?.data
+      }
+    } catch {}
+
+    // Fallback to existing endpoint
     const response = await fetch('/api/client/contact-provider', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -243,12 +291,16 @@ export function ClientQuickActions({
       })
     })
 
+    if (response.status === 401) {
+      toast({ title: 'Please sign in', description: 'Your session expired. Sign in to continue.' })
+      try { router.push('/auth/signin') } catch {}
+      return
+    }
     if (!response.ok) throw new Error('Failed to contact provider')
 
     toast({
       title: "Provider Contacted",
       description: "Your care provider has been notified and will call you shortly.",
-      variant: "default"
     })
 
     return await response.json()
@@ -258,6 +310,21 @@ export function ClientQuickActions({
    * Start video consultation
    */
   const startVideoConsultation = async () => {
+    // Try unified quick action first
+    try {
+      const res = await runQuickAction<any>({ action: 'startVideoCall', params: { clientId, type: 'immediate', duration: 30 } })
+      if (res.ok) {
+        const data: any = (res.json as any)?.data
+        const url = data?.roomUrl || data?.meetingUrl
+        if (url) {
+          try { window.open(url, '_blank', 'noopener,noreferrer') } catch {}
+        }
+        toast({ title: 'Video Consultation Started', description: 'Opening secure video room in new window.' })
+        return data
+      }
+    } catch {}
+
+    // Fallback to existing endpoint
     const response = await fetch('/api/client/video-consultation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -268,17 +335,18 @@ export function ClientQuickActions({
       })
     })
 
+    if (response.status === 401) {
+      toast({ title: 'Please sign in', description: 'Your session expired. Sign in to start a call.' })
+      try { router.push('/auth/signin') } catch {}
+      return
+    }
     if (!response.ok) throw new Error('Failed to start video consultation')
 
     const result = await response.json()
-    
+
     if (result.roomUrl) {
-      window.open(result.roomUrl, '_blank')
-      toast({
-        title: "Video Consultation Started",
-        description: "Opening secure video room in new window.",
-        variant: "default"
-      })
+      try { window.open(result.roomUrl, '_blank', 'noopener,noreferrer') } catch {}
+      toast({ title: 'Video Consultation Started', description: result.roomUrl })
     }
 
     return result
@@ -305,137 +373,111 @@ export function ClientQuickActions({
     router.push('/client/support')
   }
 
-  // Define quick actions based on workflow phase and status
-  const quickActions: QuickAction[] = [
-    // Urgent Actions
-    {
-      id: 'urgent-care',
-      title: 'Request Urgent Care',
-      description: 'Immediate assistance needed',
-      icon: AlertCircle,
-      category: 'urgent',
-      action: () => executeAction('urgent-care', requestUrgentCare),
-      estimatedTime: '< 15 min response'
-    },
-    {
-      id: 'contact-provider',
-      title: 'Contact Care Provider',
-      description: 'Speak with your assigned provider',
-      icon: Phone,
-      category: 'urgent',
-      action: () => executeAction('contact-provider', contactProvider),
-      disabled: !hasActiveServices,
-      estimatedTime: '5-10 min'
-    },
+  const signContract = async () => {
+    try {
+      const response = await fetch('/api/client/contract-signing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contractType: 'postpartum',
+          serviceDetails: 'Postpartum care services including in-home visits and 24/7 support',
+          startDate: new Date().toISOString().split('T')[0],
+          endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        })
+      });
 
-    // Primary Actions
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast({ title: "Authentication Required", description: "Please sign in to perform this action.", variant: "destructive" });
+          router.push('/auth/signin');
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.signUrl) {
+        toast({ 
+          title: 'Contract Ready', 
+          description: `Click to sign: ${result.signUrl}`,
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.open(result.signUrl, '_blank')}
+            >
+              Sign Contract
+            </Button>
+          )
+        });
+      } else {
+        toast({ title: 'Contract Sent', description: result.message });
+      }
+    } catch (error: any) {
+      if (error.message.includes('401')) {
+        toast({ title: "Authentication Required", description: "Please sign in to perform this action.", variant: "destructive" });
+        router.push('/auth/signin');
+      } else {
+        toast({ title: "Action Failed", description: "Please try again or contact support if the issue persists.", variant: "destructive" });
+      }
+    }
+  };
+
+  const actions = [
     {
       id: 'schedule-appointment',
       title: 'Schedule Appointment',
-      description: 'Book consultation or check-in',
+      description: 'Book your next care appointment',
       icon: Calendar,
-      category: 'primary',
+      category: 'primary' as const,
       action: () => executeAction('schedule-appointment', scheduleAppointment),
-      badge: upcomingAppointments > 0 ? `${upcomingAppointments} upcoming` : undefined,
-      estimatedTime: '2-3 min'
-    },
-    {
-      id: 'send-message',
-      title: 'Message Care Team',
-      description: 'Secure communication with your team',
-      icon: MessageCircle,
-      category: 'primary',
-      action: () => executeAction('send-message', sendMessage),
-      badge: unreadMessages > 0 ? `${unreadMessages} unread` : undefined,
-      estimatedTime: '1-2 min'
+      color: 'blue'
     },
     {
       id: 'video-consultation',
       title: 'Start Video Call',
-      description: 'Immediate video consultation',
+      description: 'Begin a telehealth consultation',
       icon: Video,
-      category: 'primary',
+      category: 'primary' as const,
       action: () => executeAction('video-consultation', startVideoConsultation),
-      disabled: !hasActiveServices || !isConnected,
-      estimatedTime: '30-60 min'
+      color: 'green'
     },
     {
-      id: 'care-progress',
-      title: 'View Care Progress',
-      description: 'Track your journey and milestones',
-      icon: Activity,
-      category: 'primary',
-      action: () => executeAction('care-progress', viewCareProgress),
-      badge: `Phase ${workflowPhase}/18`,
-      estimatedTime: '3-5 min'
-    },
-
-    // Secondary Actions
-    {
-      id: 'care-adjustment',
-      title: 'Request Care Changes',
-      description: 'Modify your care plan or services',
-      icon: Settings,
-      category: 'secondary',
-      action: () => executeAction('care-adjustment', requestCareAdjustment),
-      disabled: workflowPhase < 9, // Only available after contract signed
-      estimatedTime: '2-3 min'
+      id: 'contact-provider',
+      title: 'Contact Care Provider',
+      description: 'Message your assigned provider',
+      icon: MessageCircle,
+      category: 'primary' as const,
+      action: () => executeAction('contact-provider', contactProvider),
+      color: 'purple'
     },
     {
-      id: 'billing',
-      title: 'Billing & Payments',
-      description: 'View invoices and payment options',
-      icon: CreditCard,
-      category: 'secondary',
-      action: () => executeAction('billing', viewBilling),
-      estimatedTime: '2-4 min'
+      id: 'message-team',
+      title: 'Message Care Team',
+      description: 'Send message to care team',
+      icon: Users,
+      category: 'secondary' as const,
+      action: () => executeAction('message-team', sendMessage),
+      color: 'orange'
     },
     {
-      id: 'feedback',
-      title: 'Submit Feedback',
-      description: 'Share your experience and suggestions',
-      icon: Heart,
-      category: 'secondary',
-      action: () => executeAction('feedback', submitFeedback),
-      estimatedTime: '3-5 min'
-    },
-    {
-      id: 'preferences',
-      title: 'Update Preferences',
-      description: 'Communication and care preferences',
-      icon: User,
-      category: 'secondary',
-      action: () => executeAction('preferences', updatePreferences),
-      estimatedTime: '2-3 min'
-    },
-
-    // Informational Actions
-    {
-      id: 'resources',
-      title: 'Educational Resources',
-      description: 'Guides, videos, and helpful information',
+      id: 'contract-signing',
+      title: 'Sign Contract',
+      description: 'Review and sign service agreements',
       icon: FileText,
-      category: 'informational',
-      action: () => executeAction('resources', viewResources),
-      estimatedTime: '5-15 min'
-    },
-    {
-      id: 'help',
-      title: 'Help & Support',
-      description: 'FAQ, tutorials, and support contact',
-      icon: HelpCircle,
-      category: 'informational',
-      action: () => executeAction('help', getHelp),
-      estimatedTime: '2-10 min'
+      category: 'secondary' as const,
+      action: () => executeAction('contract-signing', signContract),
+      color: 'red'
     }
-  ]
+  ];
 
-  // Group actions by category
+  // Group actions by category (simplified for now)
   const groupedActions = {
-    urgent: quickActions.filter(a => a.category === 'urgent'),
-    primary: quickActions.filter(a => a.category === 'primary'),
-    secondary: quickActions.filter(a => a.category === 'secondary'),
-    informational: quickActions.filter(a => a.category === 'informational')
+    primary: actions.filter(a => ['schedule-appointment', 'video-consultation', 'contact-provider'].includes(a.id)),
+    secondary: actions.filter(a => ['message-team', 'contract-signing'].includes(a.id))
   }
 
   return (
@@ -452,32 +494,6 @@ export function ClientQuickActions({
           </span>
         </div>
       </div>
-
-      {/* Urgent Actions */}
-      {groupedActions.urgent.length > 0 && (
-        <Card className="border-[#D7C7ED]/50 bg-gradient-to-r from-[#D7C7ED]/20 to-[#D7C7ED]/10 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-[#3B2352] flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
-              <AlertCircle className="h-5 w-5" />
-              Urgent Care
-            </CardTitle>
-            <CardDescription style={{ fontFamily: "Lato, sans-serif" }}>
-              Immediate assistance and emergency support
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {groupedActions.urgent.map((action) => (
-                <QuickActionButton 
-                  key={action.id} 
-                  action={action} 
-                  isLoading={isLoading[action.id]} 
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Primary Actions */}
       <Card className="bg-white/70 backdrop-blur border-[#D7C7ED]/30 shadow-lg">
@@ -534,7 +550,7 @@ export function ClientQuickActions({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {groupedActions.informational.map((action) => (
+            {actions.filter(a => ['message-team', 'contract-signing'].includes(a.id)).map((action) => (
               <QuickActionButton 
                 key={action.id} 
                 action={action} 
@@ -577,6 +593,7 @@ function QuickActionButton({ action, isLoading }: QuickActionButtonProps) {
   return (
     <div className="relative">
       <LoadingButton
+        data-testid={`qa-${action.id}`}
         onClick={handleClick}
         disabled={action.disabled}
         variant={getButtonVariant()}

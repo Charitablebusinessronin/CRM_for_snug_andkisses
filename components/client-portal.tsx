@@ -8,6 +8,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Calendar, Clock, DollarSign, Heart, MessageSquare, Star, User, Baby, Shield, Phone, Mail, Calendar as CalendarIcon, AlertCircle } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { runQuickAction } from "@/lib/actions"
+import UnifiedActionButton from "@/components/UnifiedActionButton"
+import { useRouter } from "next/navigation"
+
+const USE_UNIFIED = process.env.NEXT_PUBLIC_USE_UNIFIED_BUTTONS === 'true'
+
+function ActionBtn({ title, onClick, variant }: { title: string; onClick?: () => void; variant?: 'primary' | 'secondary' }) {
+  return (
+    <UnifiedActionButton
+      title={title}
+      onClick={onClick || (() => {})}
+      variant={variant || 'primary'}
+    />
+  )
+}
 
 interface ClientData {
   id: string
@@ -62,11 +78,33 @@ export function ClientPortal() {
 
   const fetchClientData = async () => {
     try {
-      const response = await fetch('/api/v1/client/dashboard')
-      if (!response.ok) throw new Error('Failed to fetch client data')
+      // ADD PROPER SESSION HANDLING
+      const response = await fetch('/api/v1/client/dashboard', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Ensure cookies are sent
+      })
+      
+      console.log('Dashboard API response status:', response.status)
+      
+      if (response.status === 401) {
+        // Redirect to login if not authenticated
+        setError('Please log in to access your dashboard')
+        return
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to fetch client data: ${response.status}`)
+      }
+      
       const data = await response.json()
+      console.log('Dashboard data received:', data)
       setClientData(data.client)
     } catch (err) {
+      console.error('Client dashboard error:', err)
       setError(err instanceof Error ? err.message : 'Failed to load dashboard')
     } finally {
       setLoading(false)
@@ -74,6 +112,17 @@ export function ClientPortal() {
   }
 
   const sendMessage = async (message: string) => {
+    // Try unified quick action first
+    try {
+      const res = await runQuickAction<any>({ action: 'messageTeam', params: { message } })
+      if (res.ok) {
+        toast({ title: 'Message Sent', description: 'Your message has been delivered to the care team.' })
+        fetchClientData()
+        return (res.json as any)?.data
+      }
+    } catch {}
+
+    // Fallback to v1 endpoint
     try {
       const response = await fetch('/api/v1/client/messages', {
         method: 'POST',
@@ -81,14 +130,33 @@ export function ClientPortal() {
         body: JSON.stringify({ message })
       })
       if (response.ok) {
+        toast({ title: 'Message Sent', description: 'Your message has been delivered to the care team.' })
         fetchClientData() // Refresh data
+        return await response.json()
       }
     } catch (err) {
       console.error('Failed to send message:', err)
+      toast({ title: 'Error', description: 'Failed to send message.' })
     }
   }
 
   const scheduleAppointment = async (doulaId: string, datetime: string, type: string) => {
+    // Try unified quick action first
+    try {
+      const res = await runQuickAction<any>({ action: 'create-appointment', params: { doulaId, datetime, type } })
+      if (res.ok) {
+        const data: any = (res.json as any)?.data
+        const url = data?.bookingUrl || data?.appointmentUrl
+        if (url) {
+          try { window.open(url, '_blank', 'noopener,noreferrer') } catch {}
+        }
+        toast({ title: 'Appointment Requested', description: 'We will confirm your appointment shortly.' })
+        fetchClientData()
+        return data
+      }
+    } catch {}
+
+    // Fallback to v1 endpoint
     try {
       const response = await fetch('/api/v1/client/appointments', {
         method: 'POST',
@@ -96,10 +164,13 @@ export function ClientPortal() {
         body: JSON.stringify({ doulaId, datetime, type })
       })
       if (response.ok) {
+        toast({ title: 'Appointment Requested', description: 'We will confirm your appointment shortly.' })
         fetchClientData() // Refresh data
+        return await response.json()
       }
     } catch (err) {
       console.error('Failed to schedule appointment:', err)
+      toast({ title: 'Error', description: 'Failed to schedule appointment.' })
     }
   }
 
@@ -216,14 +287,25 @@ export function ClientPortal() {
                     </div>
                   </div>
                   <div className="text-right space-y-2">
-                    <Button 
-                      variant="outline" 
-                      className="border-[#3B2352] text-[#3B2352] block w-full"
-                      onClick={() => sendMessage(`Hello ${clientData.currentDoula?.name}, I'd like to schedule a consultation.`)}
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Message
-                    </Button>
+                    {USE_UNIFIED ? (
+                      <div className="flex items-center">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        <ActionBtn
+                          title="Message"
+                          onClick={() => sendMessage(`Hello ${clientData.currentDoula?.name}, I'd like to schedule a consultation.`)}
+                          variant="secondary"
+                        />
+                      </div>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        className="border-[#3B2352] text-[#3B2352] block w-full"
+                        onClick={() => sendMessage(`Hello ${clientData.currentDoula?.name}, I'd like to schedule a consultation.`)}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Message
+                      </Button>
+                    )}
                     <Button 
                       variant="outline" 
                       className="border-[#3B2352] text-[#3B2352] block w-full"
@@ -362,9 +444,20 @@ export function ClientPortal() {
                 <div className="text-center py-8">
                   <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-600 mb-4">No upcoming appointments scheduled.</p>
-                  <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
-                    Schedule Appointment
-                  </Button>
+                  {USE_UNIFIED ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <CalendarIcon className="h-4 w-4" />
+                      <ActionBtn
+                        title="Schedule Appointment"
+                        onClick={() => {}}
+                        variant="primary"
+                      />
+                    </div>
+                  ) : (
+                    <Button className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+                      Schedule Appointment
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -428,21 +521,43 @@ export function ClientPortal() {
                     <span>support@snugandkisses.com</span>
                   </div>
                 </Card>
-                <Button 
-                  className="w-full justify-start bg-[#3B2352] hover:bg-[#3B2352]/90 text-white"
-                  onClick={() => sendMessage('I need support with my current care plan.')}
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Contact Support Team
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start border-[#3B2352] text-[#3B2352]"
-                  onClick={() => scheduleAppointment('support', new Date().toISOString(), 'support_call')}
-                >
-                  <CalendarIcon className="h-4 w-4 mr-2" />
-                  Schedule Support Call
-                </Button>
+                {USE_UNIFIED ? (
+                  <div className="w-full flex items-center justify-start gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <ActionBtn
+                      title="Contact Support Team"
+                      onClick={() => sendMessage('I need support with my current care plan.')}
+                      variant="primary"
+                    />
+                  </div>
+                ) : (
+                  <Button 
+                    className="w-full justify-start bg-[#3B2352] hover:bg-[#3B2352]/90 text-white"
+                    onClick={() => sendMessage('I need support with my current care plan.')}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Contact Support Team
+                  </Button>
+                )}
+                {USE_UNIFIED ? (
+                  <div className="w-full flex items-center justify-start gap-2">
+                    <Phone className="h-4 w-4" />
+                    <ActionBtn
+                      title="Schedule Support Call"
+                      onClick={() => scheduleAppointment('support', new Date().toISOString(), 'support_call')}
+                      variant="secondary"
+                    />
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start border-[#3B2352] text-[#3B2352]"
+                    onClick={() => scheduleAppointment('support', new Date().toISOString(), 'support_call')}
+                  >
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    Schedule Support Call
+                  </Button>
+                )}
                 <Button variant="outline" className="w-full justify-start border-[#3B2352] text-[#3B2352]">
                   <Heart className="h-4 w-4 mr-2" />
                   Access Resource Library

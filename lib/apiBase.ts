@@ -10,13 +10,18 @@ export function getApiBase(): string {
   const serverBase = process.env.SERVER_API_BASE_URL;
   if (serverBase && typeof window === 'undefined') return serverBase;
 
-  // Public env var for browser requests
-  const publicBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  // Public env var for browser requests (should include /api suffix)
+  const publicBase = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
   if (publicBase) return publicBase;
+
+  // Backend API URL from env
+  const backendBase = process.env.BACKEND_API_URL;
+  if (backendBase) return backendBase;
 
   // Legacy support
   const legacy = process.env.EXPRESS_BACKEND_URL;
   if (legacy) return legacy;
 
-  return 'http://localhost:4728';
+  // Default fallback with /api suffix to match your env
+  return 'http://localhost:4728/api';
 }

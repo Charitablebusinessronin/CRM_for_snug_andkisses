@@ -1,5 +1,9 @@
 "use client"
 
+// Ensure this page is rendered dynamically to avoid Next.js trying to prerender
+// components that depend on client-only context like NextAuth's SessionProvider.
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ClientQuickActions } from "@/components/client/client-quick-actions"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { 
   Calendar, 
@@ -23,8 +28,7 @@ import {
   CreditCard,
   FileText,
   MessageSquare,
-  Home,
-  LogOut
+  Home
 } from "lucide-react"
 
 interface ServiceRequest {
@@ -58,13 +62,97 @@ interface WorkflowPhase {
 }
 
 export default function ClientDashboard() {
-  const [client, setClient] = useState({
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-    phone: "(555) 123-4567",
-    memberSince: "2024-01-15",
-    hourBalance: 24.5
-  })
+  // Ensure client-side only behavior; guard against SSR surprises
+  const router = useRouter()
+  const [client, setClient] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Fetch real client data from API
+  useEffect(() => {
+    const fetchClientData = async () => {
+      try {
+        const response = await fetch('/api/v1/client/dashboard', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        })
+        
+        console.log('Dashboard API response status:', response.status)
+        
+        if (response.status === 401) {
+          setError('Please log in to access your dashboard')
+          router.push('/auth/signin')
+          return
+        }
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Failed to fetch client data: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        console.log('Dashboard data received:', data)
+        setClient(data.client)
+      } catch (err) {
+        console.error('Client dashboard error:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+        // Fallback to mock data if API fails
+        setClient({
+          name: "Sarah Johnson",
+          email: "sarah.johnson@email.com",
+          phone: "(555) 123-4567",
+          memberSince: "2024-01-15",
+          hourBalance: 24.5
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchClientData()
+  }, [])
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#D7C7ED]/20 via-[#D7C7ED]/10 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B2352] mx-auto mb-4"></div>
+          <p className="text-[#3B2352] font-medium">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#D7C7ED]/20 via-[#D7C7ED]/10 to-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-[#3B2352] mb-2">Dashboard Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} className="bg-[#3B2352] hover:bg-[#3B2352]/90 text-white">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Show dashboard if client data exists
+  if (!client) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#D7C7ED]/20 via-[#D7C7ED]/10 to-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#3B2352] font-medium">No client data available</p>
+        </div>
+      </div>
+    )
+  }
 
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([
     {
@@ -191,10 +279,15 @@ export default function ClientDashboard() {
                 Home
               </Button>
             </Link>
-            <Button variant="outline" className="border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white transition-all duration-200">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+            {/* Avoid SSR issues by using a simple fallback sign-out link if needed */}
+            <Link href="/auth/signin" prefetch={false}>
+              <Button 
+                variant="outline" 
+                className="border-[#3B2352] text-[#3B2352] hover:bg-[#3B2352] hover:text-white transition-all duration-200"
+              >
+                Sign Out
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

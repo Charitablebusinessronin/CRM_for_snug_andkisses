@@ -1,6 +1,6 @@
 import { logger } from './utils/logger';
 
-const TEST_PORT = 4728;
+const TEST_PORT = 4729;
 
 // Test endpoints function
 const testEndpoints = async (): Promise<void> => {

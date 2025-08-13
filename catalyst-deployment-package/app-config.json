@@ -1,0 +1,9 @@
+{
+  "name": "sabir-crm-backend",
+  "command": "node ../sabir-crm-typescript/dist/index.js",
+  "scripts": {
+    "predeploy": "npm ci --prefix ../sabir-crm-typescript && npm run build --prefix ../sabir-crm-typescript"
+  },
+  "runtime": "nodejs",
+  "version": "18"
+}

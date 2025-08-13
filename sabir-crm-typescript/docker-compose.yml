@@ -5,13 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
+      target: runner
     container_name: sabir-crm-typescript-api
     ports:
-      - "4728:4728"  # Sabir's preferred port - no conflict with existing services
+      - "4729:4729"  # TypeScript CRM on separate port to avoid conflict
     environment:
       - NODE_ENV=development
-      - PORT=4728
+      - PORT=4729
       - FRONTEND_URL=http://localhost:5369
       - JWT_PRIVATE_KEY=dev-private-key-change-in-production
       - JWT_PUBLIC_KEY=dev-public-key-change-in-production
@@ -47,10 +47,10 @@ services:
       dockerfile: Dockerfile.dev
     container_name: sabir-crm-typescript-dev
     ports:
-      - "4728:4728"
+      - "4729:4729"
     environment:
       - NODE_ENV=development
-      - PORT=4728
+      - PORT=4729
       - FRONTEND_URL=http://localhost:5369
       - JWT_PRIVATE_KEY=dev-private-key
       - JWT_PUBLIC_KEY=dev-public-key

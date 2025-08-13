@@ -94,10 +94,14 @@ export const authOptions: NextAuthOptions = {
             data: { email: credentials.email }
           })
 
+          // Normalize input to avoid copy/paste whitespace errors
+          const email = String(credentials.email).trim()
+          const password = String(credentials.password).trim()
+
           // Verify user credentials
           const user = await verifyUserCredentials(
-            credentials.email,
-            credentials.password
+            email,
+            password
           )
 
           if (user) {

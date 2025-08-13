@@ -3,13 +3,31 @@
   "project_name": "Project-Rainfall",
   "env_id": "891140386",
   "env_name": "Development",
-  "functions": {
-    "source": "functions",
-    "targets": [
-      "contact-manager",
-      "lead-processor",
-      "analytics-engine",
-      "quick-actions"
-    ]
-  }
+  "functions": [
+    {
+      "function_name": "crm-api",
+      "source": "functions/crm-api",
+      "entry_file": "index.js"
+    },
+    {
+      "function_name": "quick-actions",
+      "source": "functions/quick-actions",
+      "entry_file": "main.py"
+    },
+    {
+      "function_name": "contact-manager",
+      "source": "functions/contact-manager",
+      "entry_file": "main.py"
+    },
+    {
+      "function_name": "analytics-engine",
+      "source": "functions/analytics-engine",
+      "entry_file": "main.py"
+    },
+    {
+      "function_name": "lead-processor",
+      "source": "functions/lead-processor",
+      "entry_file": "main.py"
+    }
+  ]
 }
