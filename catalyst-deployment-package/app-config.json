@@ -1,0 +1,27 @@
+
+{
+  "name": "snug-kisses-crm",
+  "version": "1.0.0",
+  "description": "Snug & Kisses CRM Backend Service",
+  "main": "../src/server.ts",
+  "scripts": {
+    "start": "node ../dist/server.js",
+    "build": "cd .. && npm run build",
+    "dev": "cd .. && npm run dev"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^6.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "catalyst": {
+    "service_type": "appsail",
+    "build_command": "npm run build",
+    "run_command": "npm start",
+    "port": 5000
+  }
+}
