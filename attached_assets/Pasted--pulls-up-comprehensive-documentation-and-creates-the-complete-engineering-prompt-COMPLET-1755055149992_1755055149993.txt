@@ -1,0 +1,245 @@
+*pulls up comprehensive documentation and creates the complete engineering prompt*
+
+# 🚀 **COMPLETE ENGINEERING PROMPT - SNUG & KISSES HEALTHCARE CRM**
+
+## 📋 **PROJECT CONTEXT & SCOPE**
+
+You are building **Snug & Kisses** - a HIPAA-compliant postpartum healthcare CRM system that provides 24/7 guardian-level care for new families through doula services, backup childcare, and comprehensive postpartum support.[[1]](https://www.notion.so/2121d9be65b3809e8188c23103a22615)
+
+**Business Model:**[[2]](https://www.notion.so/074f509546784b7fb6867cef7c7fc4d6)
+- **Client Portal:** New families request doula services, backup childcare, postpartum support
+- **Contractor Portal:** Doulas and childcare providers manage assignments and client relationships  
+- **Employee Portal:** Company employees accessing benefits through employers
+- **Admin Portal:** Complete business management system with 8 integrated modules
+
+---
+
+## 🎨 **BRAND IDENTITY & DESIGN SYSTEM** (Exact Specifications)
+
+### **Brand Colors**[[1]](https://www.notion.so/2121d9be65b3809e8188c23103a22615)
+```css
+:root {
+  /* Primary Base - Logos, headers, buttons, text, main backgrounds */
+  --primary-base: #3B2352;
+  
+  /* Primary Accent - Sub-headlines, call-outs, highlights, icons */
+  --primary-accent: #D7C7ED;
+  
+  /* Luxury Accent - Buttons, premium services, highlights, dividers */
+  --luxury-accent: #D4AF37;
+  
+  /* Background/Secondary Accent - Soft backgrounds, cards, forms, overlays */
+  --background-accent: #D7C7ED;
+}
+```
+
+### **Typography System**[[1]](https://www.notion.so/2121d9be65b3809e8188c23103a22615)
+- **Headers (H1-H3):** Merriweather - Elegant, trustworthy, professional
+- **Body Text, Forms, CRM UI:** Lato - Clean, friendly, highly readable  
+- **Quotes, Testimonials:** Dancing Script - Warm, personal, nurturing
+- **Buttons, Labels, UI Elements:** Nunito Sans - Rounded, approachable, modern
+
+### **Brand Voice & Messaging**[[1]](https://www.notion.so/2121d9be65b3809e8188c23103a22615)
+**Personality:** Nurturing, reassuring, trustworthy, and heartfelt
+**Archetype:** Caregiver + Lover
+
+**Key Taglines:**
+- "Guarding your rest. Cherishing your family."
+- "Parenthood isn't perfect. Your care should be."  
+- "Every family's story belongs here."
+
+**Tone Principles:**
+- Speak with warmth: "We're here to help, not to judge—because you deserve support"
+- Keep it gentle: "It's okay to ask for help. Everyone needs backup sometimes"
+- Make everyone welcome: "No matter your journey, you're safe and celebrated with us"
+
+---
+
+## 🏗️ **TECHNICAL ARCHITECTURE**
+
+### **Technology Stack**[[3]](https://www.notion.so/82a03a2200df41f1a63635b8bfca77d3)
+- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui components
+- **Backend:** Zoho Catalyst Functions (100% Native Serverless) - **NOT Express**
+- **Authentication:** Zoho Catalyst Embedded Auth (Replace existing NextAuth)
+- **Database:** Catalyst DataStore with ZCQL queries
+- **Integrations:** Native Zoho CRM, Books, Bookings, Campaigns, ZIA AI
+
+### **Authentication System** (Critical Implementation)
+Replace current login with Zoho Catalyst embedded authentication:
+```html
+<script src="https://static.zohocdn.com/catalyst/sdk/js/1.0/catalyst-sdk.js"></script>
+<script src="/__catalyst/sdk/init.js"></script>
+<script>
+const config = {
+  css_url: "/css/embeddediframe.css",
+  service_url: "/client/dashboard", 
+  is_customize_forgot_password: true,
+  forgot_password_id: "forgotPasswordDivElementId",
+  forgot_password_css_url: "/css/forgotPwd.css"
+};
+catalyst.auth.signIn("loginDivElementId", config);
+</script>
+```
+
+### **Backend Functions** (Already Deployed)[[3]](https://www.notion.so/82a03a2200df41f1a63635b8bfca77d3)
+All 20/20 Catalyst functions are operational:
+- **Business Suite:** CRM, Finance, Support (1,293+ lines of production code)
+- **Authentication:** Zoho OAuth, session management  
+- **Analytics:** Python AdvancedIO with caching
+- **Client Management:** CRUD operations with HIPAA compliance
+
+---
+
+## 🎯 **FEATURE REQUIREMENTS**
+
+### **Client Portal Features** (Priority 1)[[2]](https://www.notion.so/074f509546784b7fb6867cef7c7fc4d6)
+
+**Service Management:**
+- Service request forms for doula services and backup childcare
+- Hour tracking and management system  
+- Urgent care request functionality (endpoint exists: `/api/client/video-call`)
+- 18-phase automated workflow integration
+- Real-time service status tracking
+
+**Communication Features:**
+- Video call functionality (Zoho Meeting integration)
+- Secure messaging with care team (HIPAA-compliant)
+- Client interview scheduling (calendar integration)
+- Direct communication with assigned doula/provider
+
+**Dashboard Features:**
+- Real client data integration (eliminate current mock data)
+- Live workflow status from 18-phase automation
+- Hour balance and usage analytics
+- Care team assignment information
+- Upcoming appointments and notifications
+
+**Additional Features:**
+- Digital contract signing functionality
+- Client info sheet/history form system
+- Doula/sitter matching system
+- Feedback collection system
+
+### **Multi-Portal Architecture**[[4]](https://www.notion.so/24a1d9be65b3814b8051e6f802885c4e)
+
+**Four Role-Based Portals:**
+1. **Admin Portal:** Complete business management with 8 modules[[5]](https://www.notion.so/24a1d9be65b381699b33de209fc3bd5a)
+2. **Employee Portal:** Benefits access, service requests, hour management
+3. **Contractor Portal:** Job assignments, client communication, availability calendar
+4. **Client Portal:** Service requests, care tracking, communication
+
+**Role-Based Routing:**
+```javascript
+const ROUTE_PERMISSIONS = {
+  '/admin': ['admin'],
+  '/employee': ['admin', 'employee'], 
+  '/contractor': ['admin', 'contractor'],
+  '/client': ['admin', 'employee', 'contractor', 'client']
+};
+```
+
+---
+
+## 🔒 **SECURITY & COMPLIANCE**
+
+### **HIPAA Compliance Requirements**[[6]](https://www.notion.so/24a1d9be65b381f69523eb095e299362)
+- **Data Encryption:** AES-256 for stored data, TLS 1.3 for transmission
+- **Access Controls:** Role-based permissions with audit logging
+- **Session Management:** 15-minute timeout for HIPAA compliance
+- **Audit Logging:** 7-year retention with tamper protection
+- **PHI Protection:** Protected Health Information handling for postpartum care
+
+### **Security Implementation:**
+- Multi-factor authentication required
+- Zero-trust architecture
+- Comprehensive audit trails for all actions
+- Secure data disposal after retention periods
+- Business Associate Agreements for third-party integrations
+
+---
+
+## 🔄 **CLIENT WORKFLOW SYSTEM** (18-Phase Automation)[[7]](https://www.notion.so/5985beec54f7415f9f2c4efaf4d74bb9)
+
+### **Phase Structure:**
+1. **Lead Capture:** Website form → CRM entry → Email automation
+2. **Interview Scheduling:** Calendar integration → Zoom setup → Prep materials
+3. **Client Interview:** Video consultation → Needs assessment → Care plan
+4. **Doula Matching:** Provider assignment → Introduction → Preferences
+5. **Contract Process:** Digital signing → Terms → Payment setup
+6. **Service Delivery:** Care sessions → Status updates → Communication
+7. **Completion:** Service wrap-up → Feedback → Relationship maintenance
+
+### **Automation Triggers:**
+- Form submissions → Auto-email sequences
+- Interview booking → Confirmation + prep video
+- Contract signing → Welcome email with doula contact
+- Service completion → Thank you + review request
+
+---
+
+## 🛠️ **IMPLEMENTATION PRIORITIES**
+
+### **Phase 1: Authentication (Week 1)**
+- Replace NextAuth with Zoho Catalyst embedded authentication
+- Implement role-based routing and permissions
+- Connect user identity management to backend functions
+
+### **Phase 2: Client Portal Integration (Week 2)** 
+- Connect real client data (eliminate mock data)
+- Implement service request forms
+- Integrate hour management system
+- Connect video call functionality
+
+### **Phase 3: Workflow Integration (Week 3)**
+- Integrate 18-phase automation with frontend
+- Implement real-time status updates
+- Connect care team assignment system
+- Add appointment scheduling via Zoho Bookings
+
+### **Phase 4: Advanced Features (Week 4)**
+- Digital contract signing integration
+- Billing system via Zoho Books
+- Advanced analytics and reporting
+- Mobile responsiveness optimization
+
+---
+
+## 📊 **CURRENT STATUS**[[3]](https://www.notion.so/82a03a2200df41f1a63635b8bfca77d3)
+
+**✅ Complete (100%):**
+- Backend Catalyst functions (20/20 deployed)
+- Business logic modules (8/8 operational)  
+- HIPAA compliance infrastructure
+- Zoho ecosystem integrations
+
+**❌ Missing (Frontend Integration):**
+- Zoho Catalyst authentication implementation
+- Real data connection to deployed functions
+- Client portal functionality (currently 40% working)
+- 18-phase workflow frontend integration
+
+---
+
+## 🎯 **SUCCESS CRITERIA**
+
+**Technical:**
+- Zero 404 errors on any button or functionality
+- All client portal features fully operational
+- Real-time data integration with Catalyst backend
+- HIPAA-compliant audit logging active
+
+**User Experience:**
+- Seamless authentication through Zoho Catalyst
+- Intuitive navigation matching brand guidelines
+- Mobile-responsive design for busy parents
+- Warm, trustworthy interface reflecting brand personality
+
+**Business:**
+- Complete client lifecycle management
+- Automated workflow efficiency 
+- Scalable architecture for growth
+- Production-ready deployment
+
+---
+
+This prompt provides complete context for implementing the missing frontend components to connect with our world-class Catalyst backend infrastructure. Focus on authentication first, then systematic integration of each client portal feature. 🚀

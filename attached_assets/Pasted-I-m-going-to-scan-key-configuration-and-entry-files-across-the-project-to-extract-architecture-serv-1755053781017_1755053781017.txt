@@ -1,0 +1,302 @@
+I’m going to scan key configuration and entry files across the project to extract architecture, services, functions, environment variables, and deployment hooks relevant for Zoho Catalyst. Then I’ll draft a deployment-oriented technical summary.
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+Ran tool
+
+I reviewed the project’s Catalyst configs, AppSail configs, serverless functions, Node backends, and key auth/integration modules to produce a deployment-grade technical summary tailored for Zoho Catalyst hosting.
+
+### Scope and goals
+- Host the CRM’s serverless functions and supporting Node services on Zoho Catalyst.
+- Provide a detailed map of components, URLs, environment variables, datastore schema, and deployment steps for the deployment team.
+
+### High-level architecture
+- Frontend: Next.js app in `app/` with NextAuth.
+- Backend (Express, TypeScript):
+  - Root service: `src/server.ts` (scripts in root `package.json`).
+  - Alternate service: `sabir-crm-typescript/src/index.ts` (built for AppSail via `catalyst-deployment-package/app-config.json`).
+- AppSail Node service for Zoho OAuth bridging:
+  - `appsail-nodejs/` exposes `/auth/zoho/login` and `/auth/zoho/callback`, issues secure session cookie, and redirects to Next.js.
+- Catalyst Functions (Node BasicIO + Python AdvancedIO):
+  - Business CRM, Finance, Clients, Auth, Analytics, Quick Actions.
+- Integrations
+  - Zoho CRM, Books, Bookings, OAuth via `lib/zoho/*` and serverless handlers.
+
+### Runtime components and ownership
+- Frontend
+  - Next.js 15, React 19, Tailwind + shadcn/ui.
+  - NextAuth handler: `app/api/auth/[...nextauth]/route.ts`.
+- Node/Express backend
+  - Primary: `src/server.ts`. Endpoints mounted under `/api/*` with CORS/helmet/rate limiting and a `/health` check.
+  - Alt for AppSail: `sabir-crm-typescript/dist/index.js` (built ahead of deployment).
+- AppSail Node (Zoho OAuth)
+  - `appsail-nodejs/index.js`. Handles OAuth login/callback and issues short-lived JWT cookie `sk.session`.
+  - Picks listening port from `X_ZOHO_CATALYST_LISTEN_PORT`.
+- Serverless functions
+  - Aggregator entry: `functions/index.js` routes to:
+    - `functions/auth/auth.js` (login, token verification, Zoho OAuth callback persistence).
+    - `functions/business-suite/crm-functions.js` (customers, deals, tasks/events, quick stats, notes, leads, accounts).
+    - `functions/business-suite/finance-functions.js` (invoices, line items, payments, summaries, expenses).
+    - `functions/clients/clients.js` (CRUD for clients, Zoho lead sync, mails, audits).
+  - Python advanced workers:
+    - `functions/analytics-engine/main.py` (dashboard analytics with caching).
+    - `functions/contact-manager/main.py` (via config).
+    - `functions/lead-processor/main.py`.
+    - `functions/quick-actions/main.py`.
+    - `functions/zia-intelligence/main.py` (reserved scaffolding).
+  - Additional BasicIO function: `functions/crm-api/index.js` (health and generic endpoints).
+  - Shift notes BasicIO: `functions/shift-notes/*` (Node18).
+
+### Catalyst configuration overview
+- Primary deployment file: `catalyst.json`
+  - Project: Project-Rainfall (project_id: 30300000000011038), Env: Development (env_id: 891140386).
+  - Functions listed: `crm-api`, `quick-actions`, `contact-manager`, `analytics-engine`, `lead-processor`.
+- Ops config (alt): `ops/config/catalyst.json`
+  - Declares a `functions` block with targets: `contact-manager`, `lead-processor`, `analytics-engine`, `quick-actions`.
+- Function-level configs (examples):
+  - `functions/contact-manager/catalyst-config.json` (python3 advancedIO).
+  - `functions/lead-processor/catalyst-config.json` (python3 advancedIO).
+  - `functions/quick-actions/catalyst-config.json` (python3 advancedIO).
+  - `functions/zia-intelligence/catalyst-config.json` (python3 advancedIO).
+  - `functions/shift-notes/catalyst-config.json` (node18 basicio).
+  - `functions/crm-api/package.json` + `index.js` (Node BasicIO).
+- AppSail configs:
+  - `appsail-nodejs/app-config.json` (Node 18; `npm ci` predeploy; command `node index.js`).
+  - `catalyst-deployment-package/app-config.json` (Node 18; predeploy builds `../sabir-crm-typescript`; command `node ../sabir-crm-typescript/dist/index.js`).
+
+### External integrations
+- Zoho OAuth flows:
+  - AppSail service at `/auth/zoho/login` → Zoho Accounts authorization → `/auth/zoho/callback` exchanges code for tokens and issues `sk.session` cookie. Env keys: `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REDIRECT_URI`, `ZOHO_ACCOUNTS_BASE` (region).
+  - Edge route `app/api/v1/zoho/auth/route.ts` helps obtain refresh tokens interactively for setup.
+  - Token refresh helper: `lib/zoho/auth.ts` caches access tokens using refresh token.
+- Zoho Bookings integration: `lib/zoho/bookings-integration.ts` for services, staff, appointments, notifications, and CRM sync.
+
+### API surface (non-exhaustive)
+- Express backend (`src/server.ts`)
+  - `/health`, `/api` discovery endpoint.
+  - `/api/auth/*`, `/api/contacts`, `/api/leads`, `/api/zoho/*`, `/api/portal/*` (urgent care, schedule, messages, etc.).
+- Serverless BasicIO/AdvancedIO (proxied through Catalyst endpoints)
+  - `functions/index.js` routes subpaths to CRM/Finance/Auth modules:
+    - CRM: `/crm/customers`, `/crm/deals`, tasks/events/notes, stats/activities.
+    - Finance: invoicing, send invoice, payments, summaries, expenses.
+  - `functions/crm-api/index.js` responds to `/` and `/health` with environment and status.
+
+### Data layer (Catalyst DataStore expected tables)
+Provision these tables before first run; derive fields from code references:
+
+- Operational tables
+  - `customers`: name, email, phone, company, status, created_time, modified_time, address?
+  - `deals`: name, customer_id, amount, stage, probability, expected_close_date, created_time, modified_time
+  - `activities`: customer_id, deal_id?, activity_type, description, created_time, related_to_id?, related_to_type?
+  - `invoices`: invoice_number, customer_id, customer_name, customer_email, customer_address, subtotal, tax_rate, tax_amount, total_amount, status, due_date, payment_terms, notes, paid_amount?, paid_time?, created_time, modified_time
+  - `invoice_line_items`: invoice_id, description, quantity, unit_price, total, created_time
+  - `payments`: invoice_id, invoice_number, customer_id, amount, payment_method, payment_reference, payment_date, notes, created_time
+  - `expenses`: description, amount, category, expense_date, receipt_url, employee_id, notes, status, created_time, modified_time
+  - `employees` (referenced for expense employee_name lookup): at least ROWID, name
+  - `Clients`: user_id, assigned_employee, assigned_contractors[], first_name, last_name, email, phone, company, status, created_at, updated_at, zoho_lead_id?
+  - `Users`: email, password, name, role
+  - `AuditLogs`: user_id, action, details, resource_id?, ip_address, timestamp
+- Zoho-synced tables
+  - `zoho_leads`: first_name, last_name, email, phone, company, lead_source, lead_status, catalyst_client_id?, created_time, modified_time
+  - `zoho_contacts`: name, email, phone, company, contact_type, status, created_time, modified_time
+  - `zoho_accounts`: account_name, account_type, industry, phone, email, website, billing_address, annual_revenue, employees, created_time, modified_time
+  - `zoho_tasks`: subject, due_date, status, priority, description, related_to_id, related_to_type, completion_notes?, completed_time?, created_time, modified_time
+  - `zoho_events`: subject, start_datetime, end_datetime, location, description, related_to_id, related_to_type, reschedule_reason?, rescheduled_time?, created_time, modified_time
+- Config tables
+  - `ZohoConfig`: access_token, refresh_token, expires_at (keyed; e.g., ROWID="zoho_tokens")
+
+Notes:
+- Several modules use ZCQL against `zoho_*` tables; keep field names consistent.
+- Where email is unique (leads/contacts/customers), functions do duplicate checks.
+
+### Security, auth, and compliance
+- Frontend session: NextAuth, plus optional AppSail-issued `sk.session` JWT cookie (HS256, 15 minutes).
+- Backend JWT: `JWT_SECRET` for verification and issuance; 24h default via `envConfig`.
+- Audit logging: HIPAA-style logging across auth and key write operations to `AuditLogs` (and console logs for booking actions).
+- CORS: in `src/server.ts`, allowed origins include development hosts; set `ALLOWED_ORIGINS` for production.
+
+### Environment variables and secrets
+Configure per component. Recommended values per environment.
+
+- Shared Zoho OAuth
+```bash
+# Accounts base (region-aware): accounts.zoho.com | accounts.zoho.eu | accounts.zoho.in
+ZOHO_ACCOUNTS_BASE=https://accounts.zoho.com
+ZOHO_CLIENT_ID=...
+ZOHO_CLIENT_SECRET=...
+ZOHO_REFRESH_TOKEN=...         # obtainable via /api/v1/zoho/auth flow
+```
+
+- AppSail OAuth service (`appsail-nodejs/`)
+```bash
+APPSAIL_SESSION_SECRET=...     # strong random
+FRONTEND_URL=https://<frontend-domain>
+ZOHO_CLIENT_ID=...
+ZOHO_CLIENT_SECRET=...
+ZOHO_REDIRECT_URI=https://<appsail-oauth-domain>/auth/zoho/callback
+ZOHO_ACCOUNTS_BASE=https://accounts.zoho.com
+```
+
+- Express backend (`sabir-crm-typescript` or root `src/server.ts`)
+```bash
+PORT=4728
+NODE_ENV=production
+ALLOWED_ORIGINS=https://<frontend-domain>
+JWT_SECRET=...                 # required
+JWT_EXPIRES_IN=24h
+
+ZOHO_CRM_CLIENT_ID=...
+ZOHO_CRM_CLIENT_SECRET=...
+ZOHO_CRM_REFRESH_TOKEN=...
+ZOHO_ENVIRONMENT=production
+ZOHO_DOMAIN=com
+
+ZOHO_BOOKS_CLIENT_ID=...
+ZOHO_BOOKS_CLIENT_SECRET=...
+ZOHO_BOOKS_REFRESH_TOKEN=...
+ZOHO_BOOKS_ORG_ID=...
+
+CATALYST_PROJECT_ID=30300000000011038
+CATALYST_FROM_EMAIL=noreply@yourdomain.com
+```
+
+- Next.js (`.env.production` or Catalyst Web Client hosting, if used)
+```bash
+NEXT_PUBLIC_APP_ENV=production
+NEXT_PUBLIC_API_URL=https://<backend-domain>/api
+NEXT_PUBLIC_CATALYST_PROJECT_ID=30300000000011038
+NEXT_PUBLIC_CATALYST_ENV_ID=891140386
+NEXTAUTH_URL=https://<frontend-domain>
+```
+
+- Function-level envs (examples in configs)
+```bash
+LOG_LEVEL=info
+FINANCE_EMAIL=finance@yourdomain.com
+CATALYST_APP_URL=https://<frontend-domain>
+```
+
+### URL and routing plan
+- AppSail OAuth service: `https://<appsail-oauth-domain>/`
+  - `/auth/zoho/login` → redirects to Zoho Accounts.
+  - `/auth/zoho/callback` → exchanges code, issues cookie, redirects to `<FRONTEND_URL>/client/dashboard`.
+- Backend API (AppSail service via `sabir-crm-typescript` or external):
+  - `https://<backend-domain>/health`
+  - `https://<backend-domain>/api/...` for auth, contacts, leads, portal flows, zoho sync.
+- Serverless Functions (Catalyst base domain):
+  - `https://project-rainfall-891140386.development.catalystserverless.com/server/<function_name>/...`
+  - Ensure any frontend calls are pointed to the function endpoints you expose via API Gateway mapping or directly.
+
+### Build and deployment
+- Prerequisites
+  - Zoho Catalyst project and environment created (matching `project_id` and `env_id`).
+  - Catalyst CLI authenticated with appropriate org scope.
+  - Zoho OAuth client (client_id/secret) and Redirect URI pointing to AppSail OAuth callback.
+  - Create DataStore tables listed above.
+
+- Functions deployment
+  - Verify `catalyst.json` includes all desired functions.
+  - Ensure each function folder contains its handler (`index.js` or `main.py`) and function config (`catalyst-config.json` or package.json for BasicIO where applicable).
+  - Deploy via CLI from repo root:
+    - zcatalyst deploy
+  - If using `ops/config/catalyst.json`, run from that path or pass config explicitly.
+
+- AppSail deployment
+  - OAuth service:
+    - Use `appsail-nodejs/app-config.json`.
+    - Ensure `package.json` in `appsail-nodejs/` contains correct dependencies (`express`, `jose`, `cookie`, `zcatalyst-sdk-node`).
+    - Deploy via Catalyst console or CLI; set env vars listed above.
+  - Backend API (TypeScript service):
+    - Use `catalyst-deployment-package/app-config.json`; predeploy builds `../sabir-crm-typescript`.
+    - Confirm `sabir-crm-typescript` builds cleanly; the command runs `node ../sabir-crm-typescript/dist/index.js`.
+    - Alternatively, if you choose the root `src/server.ts` service, adapt the AppSail app-config accordingly.
+
+- Frontend deployment
+  - Option A: Host Next.js on Vercel/Netlify, point to backend/AppSail endpoints.
+  - Option B: Host on Catalyst AppSail (SSR Node). Provide an AppSail service with `next start` command; set `NEXTAUTH_URL` and public envs.
+
+- Redirect URIs and scopes
+  - In Zoho Console, set Redirect URI to the AppSail OAuth callback.
+  - Scopes used include `AaaServer.profile.READ`, `ZohoCRM.modules.ALL`, `ZohoCRM.settings.ALL`, `ZohoBooks.fullaccess.all` (confirm exact scope list you intend to grant).
+
+### Post-deployment validation
+- Health checks
+  - Backend: GET `/health` and `/api`.
+  - `functions/crm-api`: GET `/server/crm-api/health` (adjust if mounted differently).
+  - Analytics engine: call `/server/analytics-engine/analytics/dashboard` and confirm cache behavior.
+- OAuth flow
+  - Visit `/auth/zoho/login` on AppSail, complete consent, ensure `sk.session` cookie is set and redirect lands in the frontend dashboard.
+- Data CRUD
+  - Create customer/lead via serverless CRM functions; verify rows appear in DataStore and audit entries log to `AuditLogs`.
+  - Create invoice and record payment; confirm invoice status transitions and email sending (Catalyst email).
+
+### Logging, monitoring, compliance
+- HIPAA audit logs
+  - Actions log to `AuditLogs` and structured console logs. Configure log retention per org policy.
+- Rate limiting and security headers
+  - `express-rate-limit` and `helmet` enabled in `src/server.ts`.
+- Secrets
+  - Never log OAuth tokens; code avoids printing tokens. Use Catalyst Secrets Manager where available or restrict env access to production only.
+
+### Rollout, rollback, and versioning
+- AppSail maintains versions; keep prior versions for rollback.
+- Serverless function versions managed per deployment; consider blue/green by env.
+- Track environment configs separately for Dev/Sandbox vs Production (different `ZOHO_ACCOUNTS_BASE`, domain, client IDs).
+
+### Known caveats and alignment notes
+- The repo contains both a root backend (`src/server.ts`) and a dedicated service in `sabir-crm-typescript/`. The `catalyst-deployment-package/app-config.json` assumes the latter for AppSail. Pick one for production to avoid duplication.
+- CRM function modules use admin-scoped Catalyst initialization for ZCQL and DataStore sync; ensure the deployment user has the required permissions.
+- The `functions/clients/clients.js` references `adminApp.cloudscale.dataStore.getComponentInstance()` which aligns with Catalyst CloudScale; keep component names consistent in DataStore.
+- Update `ALLOWED_ORIGINS` to the production frontend domain before go-live.
+
+### Handover checklist
+- Catalyst project/env created and CLI authenticated.
+- All DataStore tables provisioned with fields above.
+- Zoho OAuth app configured with correct Redirect URI and scopes.
+- Environment variables set for:
+  - AppSail OAuth
+  - Backend (selected Node service)
+  - Functions (LOG_LEVEL, finance email, app URL)
+  - Next.js frontend (public and server-side)
+- Functions deployed; verify endpoints.
+- AppSail services deployed; verify health endpoints and OAuth callback.
+- Frontend deployed and linked to backend URLs.
+- End-to-end tests: auth, CRUD, invoice/payment flows, analytics, and portal actions.
+
+Status: I parsed the Catalyst and AppSail configs, backends, functions, and integration helpers. I compiled a deployment-focused technical brief with architecture, env/URL mapping, datastore schema, and exact actions for Catalyst deployment.
+
+- Key artifacts referenced: `catalyst.json`, `ops/config/catalyst.json`, `appsail-nodejs/app-config.json`, `catalyst-deployment-package/app-config.json`, `functions/*`, `src/server.ts`, `lib/zoho/*`, `app/api/v1/zoho/auth/route.ts`.
+- You can share this document directly with the Catalyst deployment team.
+
+- Clear components to deploy on Catalyst:
+  - AppSail OAuth service from `appsail-nodejs/`.
+  - AppSail backend service from `sabir-crm-typescript/` per `catalyst-deployment-package/`.
+  - Serverless Functions listed in `catalyst.json`.
+
+- Confirm DataStore tables and set env vars before deployment.

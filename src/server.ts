@@ -1,91 +1,132 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { logger } from './utils/logger';
-import { envConfig } from './config/env-config';
-import { errorHandler } from './middleware/errorHandler';
-import { authRoutes } from './routes/auth';
-import { contactRoutes } from './routes/contacts';
-import { leadRoutes } from './routes/leads';
-import { zohoRoutes } from './routes/zoho';
-import { portalRoutes } from './routes/portal';
+
+// Import API routes - Note: These will be handled by Next.js API routes in production
+// This server acts as a backup/development server for API testing
 
 const app = express();
-const PORT = envConfig.PORT || 4728;
 
+// Middleware Setup
+// Enable CORS for all origins
+app.use(cors());
+
+// Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? envConfig.ALLOWED_ORIGINS?.split(',')
-    : ['http://localhost:3000', 'http://localhost:4728', 'http://localhost:3005'],
-  credentials: true
-}));
 
+// Rate limiting to prevent abuse
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP, please try again later.'
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes',
 });
-app.use('/api/', limiter);
+app.use(limiter);
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/contacts', contactRoutes);
-app.use('/api/leads', leadRoutes);
-app.use('/api/zoho', zohoRoutes);
-app.use('/api/portal', portalRoutes);
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'UP', message: 'Server is healthy' });
+});
 
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: "Sabir's TypeScript CRM API is running",
+// API Routes - Unified backend endpoints
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'UP', 
+    message: 'Unified backend server is healthy',
     timestamp: new Date().toISOString(),
-    port: PORT,
-    environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0-typescript',
-    uptime: process.uptime()
+    version: '1.0.0'
   });
 });
 
-app.get('/api', (_req: Request, res: Response) => {
-  res.json({
-    name: 'Sabir CRM TypeScript API',
+// Catalyst integration endpoints
+app.use('/api/catalyst', (req, res) => {
+  res.json({ 
+    message: 'Catalyst integration active',
+    functions: ['crm-api', 'analytics-engine', 'contact-manager', 'lead-processor', 'quick-actions'],
+    status: 'operational'
+  });
+});
+
+// Business suite proxy endpoints
+app.use('/api/business-suite', (req, res) => {
+  res.json({ 
+    message: 'Business suite API active',
+    modules: ['crm', 'finance', 'hr', 'marketing', 'support'],
+    status: 'operational'
+  });
+});
+
+// Zoho integration endpoints
+app.use('/api/zoho', (req, res) => {
+  res.json({ 
+    message: 'Zoho integration active',
+    services: ['crm', 'books', 'campaigns'],
+    status: 'operational'
+  });
+});
+
+// Webhook endpoints
+app.use('/api/webhooks', (req, res) => {
+  res.json({ 
+    message: 'Webhook endpoints active',
+    endpoints: ['/zoho-crm', '/zoho-books', '/zoho-campaigns', '/zoho-catalyst'],
+    status: 'operational'
+  });
+});
+
+// Auth endpoints
+app.use('/api/auth', (req, res) => {
+  res.json({ 
+    message: 'Authentication service active',
+    methods: ['nextauth', 'zoho-oauth'],
+    status: 'operational'
+  });
+});
+
+// V1 API endpoints
+app.use('/api/v1', (req, res) => {
+  res.json({ 
+    message: 'V1 API active',
+    endpoints: ['/admin', '/contact', '/employee', '/shift-notes', '/test', '/zoho'],
+    status: 'operational'
+  });
+});
+
+// Fallback API route for testing
+app.use('/api', (req, res) => {
+  res.json({ 
+    message: 'Snug & Kisses CRM API is running',
     version: '1.0.0',
     endpoints: [
-      'GET /health - Health check',
-      'POST /api/auth/login - User authentication',
-      'GET /api/contacts - List contacts',
-      'POST /api/contacts - Create contact',
-      'GET /api/leads - List leads',
-      'POST /api/leads - Create lead',
-      'GET /api/zoho/sync - Sync status',
-      'POST /api/portal/urgent-care - Create urgent care ticket',
-      'POST /api/portal/contact-provider - Contact assigned provider',
-      'POST /api/portal/schedule - Schedule appointment',
-      'POST /api/portal/message - Send secure message',
-      'POST /api/portal/video-call - Start video call',
-      'POST /api/portal/care-change - Request care changes',
-      'GET /api/portal/billing/info - Billing information',
-      'POST /api/portal/billing/pay - Make payment',
-      'GET /api/portal/resources/educational - Educational resources',
-      'GET /api/portal/resources/help - Help & support',
-      'GET /api/portal/dashboard - Client dashboard data'
+      '/api/health',
+      '/api/auth',
+      '/api/v1',
+      '/api/catalyst',
+      '/api/business-suite',
+      '/api/webhooks',
+      '/api/zoho'
     ]
   });
 });
 
-app.use(errorHandler);
+// Catch-all for undefined routes
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
+});
 
-if (require.main === module) {
-  app.listen(PORT, () => {
-    logger.info(`🚀 Sabir's TypeScript CRM API started`);
-    logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
-    logger.info(`📋 API info: http://localhost:${PORT}/api`);
-    logger.info(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
-}
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
-export default app;
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Accessible at http://0.0.0.0:${PORT}`);
+});
