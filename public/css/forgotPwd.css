@@ -1,0 +1,78 @@
+
+/* Forgot Password Styling - Snug & Kisses Brand */
+.catalyst-forgot-pwd-container {
+  font-family: 'Lato', sans-serif;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.catalyst-forgot-pwd-title {
+  font-family: 'Merriweather', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #3B2352;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.catalyst-forgot-pwd-description {
+  color: #3B2352;
+  opacity: 0.8;
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.catalyst-forgot-pwd-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #D7C7ED;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: 'Lato', sans-serif;
+  margin-bottom: 16px;
+}
+
+.catalyst-forgot-pwd-input:focus {
+  outline: none;
+  border-color: #3B2352;
+  box-shadow: 0 0 0 3px rgba(59, 35, 82, 0.1);
+}
+
+.catalyst-forgot-pwd-button {
+  width: 100%;
+  background: #3B2352;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Nunito Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.catalyst-forgot-pwd-button:hover {
+  background: #2a1a3d;
+  transform: translateY(-1px);
+}
+
+.catalyst-back-to-login {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  color: #3B2352;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.catalyst-back-to-login:hover {
+  color: #D4AF37;
+  text-decoration: underline;
+}
