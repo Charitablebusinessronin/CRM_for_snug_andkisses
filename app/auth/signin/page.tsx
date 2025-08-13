@@ -1,3 +1,4 @@
+
 "use client"
 
 import CatalystAuthLogin from "@/components/auth/catalyst-auth-login"
