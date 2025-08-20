@@ -1,0 +1,25 @@
+# Replit Deployment Configuration
+# This file configures the Replit environment for SnugSquad
+
+{
+  "name": "SnugSquad CRM",
+  "description": "Healthcare CRM with client portal, contractor management, and Zia AI integration",
+  "language": "nodejs",
+  "run": "cd web && npm run dev",
+  "entrypoint": "web/src/app/page.tsx",
+  "hidden": [".config", "web/.next", "web/node_modules"],
+  "modules": ["nodejs-20"],
+  "deployment": {
+    "run": ["sh", "-c", "cd web && npm run build && npm run start"],
+    "deploymentTarget": "cloudrun"
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_ZOHO_LOGIN_URL": "https://accounts.zoho.com/oauth/v2/auth"
+  },
+  "ports": {
+    "3000": {
+      "externalPort": 80
+    }
+  }
+}

@@ -2,21 +2,106 @@ version: '3.8'
 
 services:
   snugsquad-web:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        - NODE_ENV=production
+    
     ports:
       - "3000:3000"
+    
+    # Environment variables with your production configuration
     environment:
+      # Core Next.js Configuration
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-      # Add your environment variables here
-      # - CATALYST_PROJECT_ID=your_project_id
-      # - CATALYST_ENVIRONMENT_ID=development
-      # - ZOHO_REGION=us
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      
+      # Catalyst Configuration
+      - NEXT_PUBLIC_CATALYST_PROJECT_ID=${NEXT_PUBLIC_CATALYST_PROJECT_ID:-48697000000023005}
+      - NEXT_PUBLIC_CATALYST_ENV_ID=${NEXT_PUBLIC_CATALYST_ENV_ID:-891140386}
+      
+      # Zoho OAuth Configuration (Server-side - NO NEXT_PUBLIC)
+      - ZOHO_CLIENT_ID=${ZOHO_CLIENT_ID:-}
+      - ZOHO_CLIENT_SECRET=${ZOHO_CLIENT_SECRET:-}
+      - ZOHO_REFRESH_TOKEN=${ZOHO_REFRESH_TOKEN:-}
+      
+      # Zoho OAuth Configuration (Client-side - with NEXT_PUBLIC)
+      - NEXT_PUBLIC_ZOHO_CLIENT_ID=${NEXT_PUBLIC_ZOHO_CLIENT_ID:-}
+      - NEXT_PUBLIC_ZOHO_LOGIN_URL=${NEXT_PUBLIC_ZOHO_LOGIN_URL:-https://accounts.zoho.com/oauth/v2/auth}
+      
+      # Zoho API Endpoints
+      - ZOHO_CRM_API_URL=${ZOHO_CRM_API_URL:-https://www.zohoapis.com}
+      - ZOHO_BASE_URL=${ZOHO_BASE_URL:-https://www.zohoapis.com}
+      - ZOHO_ACCOUNTS_URL=${ZOHO_ACCOUNTS_URL:-https://accounts.zoho.com}
+      
+      # Production URLs
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-}
+      - NEXT_PUBLIC_REDIRECT_URI=${NEXT_PUBLIC_REDIRECT_URI:-}
+      
+      # HIPAA Healthcare Configuration
+      - SESSION_TIMEOUT=${SESSION_TIMEOUT:-900000}
+      - HIPAA_AUDIT_LOGGING=${HIPAA_AUDIT_LOGGING:-true}
+      - ENCRYPTION_LEVEL=${ENCRYPTION_LEVEL:-AES256}
+      
+      # Email Configuration
+      - EMAIL_SMTP_HOST=${EMAIL_SMTP_HOST:-smtp.zoho.com}
+      - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT:-587}
+      - EMAIL_SMTP_USER=${EMAIL_SMTP_USER:-}
+      - EMAIL_SMTP_PASSWORD=${EMAIL_SMTP_PASSWORD:-}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      
+      # Rate Limiting
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      
+      # Security Headers
+      - SECURITY_HEADERS_ENABLED=${SECURITY_HEADERS_ENABLED:-true}
+      - CORS_ORIGIN=${CORS_ORIGIN:-}
+    
+    # Use .env file for local development
+    env_file:
+      - .env.local
+    
+    # Restart policy for production reliability
     restart: unless-stopped
+    
+    # Container naming for easier management
     container_name: snugsquad-web
+    
+    # Resource limits for production deployment
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    
+    # Health check configuration
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health_FAKE"]
+      test: ["CMD", "node", "--eval", "const http = require('http'); const req = http.request({host: 'localhost', port: 3000, path: '/', timeout: 2000}, (res) => process.exit(0)); req.on('error', () => process.exit(1)); req.on('timeout', () => process.exit(1)); req.end();"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    
+    # Security configurations
+    security_opt:
+      - no-new-privileges:true
+    
+    # Logging configuration for production monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  default:
+    name: snugsquad-network
+    driver: bridge

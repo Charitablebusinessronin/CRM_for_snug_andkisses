@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "targets": [
+      "project_rainfall_function"
+    ],
+    "ignore": [],
+    "source": "functions"
+  }
+}

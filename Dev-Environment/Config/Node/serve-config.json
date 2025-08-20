@@ -1,0 +1,29 @@
+{
+  "port": 5002,
+  "public": "public",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "etag": true,
+  "symlinks": true,
+  "cors": true,
+  "headers": [
+    {
+      "source": "**/*.@(jpg|jpeg|gif|png|webp|svg|ico)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "**/*.@(css|js)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000"
+        }
+      ]
+    }
+  ]
+}

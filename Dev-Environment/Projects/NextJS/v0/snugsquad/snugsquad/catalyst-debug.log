@@ -1,0 +1,35 @@
+[debug] [2025-08-20T11:06:45.563Z] : 
+[debug] [2025-08-20T11:06:45.564Z] : ----------------------------------------------------------------------
+[debug] [2025-08-20T11:06:45.564Z] : Command:      C:\nvm4w\nodejs\node.exe C:\nodejs-global\node_modules\zcatalyst-cli\lib\bin\catalyst.js functions:setup
+[debug] [2025-08-20T11:06:45.564Z] : CLI Version:  1.20.2
+[debug] [2025-08-20T11:06:45.564Z] : Platform:     win32
+[debug] [2025-08-20T11:06:45.565Z] : Node Version: v20.11.0
+[debug] [2025-08-20T11:06:45.565Z] : Time:         Wed Aug 20 2025 07:06:45 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-08-20T11:06:45.565Z] : ----------------------------------------------------------------------
+[debug] [2025-08-20T11:06:45.565Z] : 
+[debug] [2025-08-20T11:06:45.840Z] : > authorizing via signed-in user option
+[debug] [2025-08-20T11:06:45.840Z] : > command requires scopes: ["ZohoCatalyst.projects.ALL","ZohoCatalyst.functions.ALL"]
+[debug] [2025-08-20T11:06:45.849Z] : >>>> HTTP REQUEST : GET https://api.catalyst.zoho.com/baas/v1/project/30300000000011038 
+
+[debug] [2025-08-20T11:06:46.197Z] : <<<< HTTP RESPONSE : 200
+Response Headers: {"server":"ZGS","date":"Wed, 20 Aug 2025 11:06:47 GMT","content-type":"application/vnd.catalyst.v2+json","transfer-encoding":"chunked","connection":"keep-alive","x-content-type-options":"nosniff","cache-control":"private,no-cache,no-store,max-age=0,must-revalidate","pragma":"no-cache","expires":"Thu, 01 Jan 1970 00:00:00 GMT","x-frame-options":"DENY","strict-transport-security":"max-age=64072000; includeSubDomains; preload"}
+
+[debug] [2025-08-20T11:06:46.200Z] : >>>> HTTP REQUEST : GET https://api.catalyst.zoho.com/baas/v1/project/30300000000011038/environment 
+
+[debug] [2025-08-20T11:06:46.323Z] : <<<< HTTP RESPONSE : 200
+Response Headers: {"server":"ZGS","date":"Wed, 20 Aug 2025 11:06:48 GMT","content-type":"application/vnd.catalyst.v2+json","transfer-encoding":"chunked","connection":"keep-alive","x-content-type-options":"nosniff","cache-control":"private,no-cache,no-store,max-age=0,must-revalidate","pragma":"no-cache","expires":"Thu, 01 Jan 1970 00:00:00 GMT","x-frame-options":"DENY","strict-transport-security":"max-age=64072000; includeSubDomains; preload"}
+
+[info] [2025-08-20T11:06:46.450Z] : i A directory functions will be created with a catalyst function pre-configured.
+
+[debug] [2025-08-20T11:06:46.451Z] : >>>> HTTP REQUEST : GET https://api.catalyst.zoho.com/baas/get-details 
+Query params: {"feature_name":"integration_services"}
+
+[debug] [2025-08-20T11:06:46.560Z] : <<<< HTTP RESPONSE : 200
+Response Headers: {"server":"ZGS","date":"Wed, 20 Aug 2025 11:06:48 GMT","content-type":"application/vnd.catalyst.v2+json","transfer-encoding":"chunked","connection":"keep-alive","x-content-type-options":"nosniff","cache-control":"private,no-cache,no-store,max-age=0,must-revalidate","pragma":"no-cache","expires":"Thu, 01 Jan 1970 00:00:00 GMT","x-frame-options":"DENY","strict-transport-security":"max-age=64072000; includeSubDomains; preload"}
+
+[debug] [2025-08-20T11:06:56.072Z] : >>>> HTTP REQUEST : GET https://api.catalyst.zoho.com/baas/get-details 
+Query params: {"feature_name":"runtime","function_type":"advancedio"}
+
+[debug] [2025-08-20T11:06:56.358Z] : <<<< HTTP RESPONSE : 200
+Response Headers: {"server":"ZGS","date":"Wed, 20 Aug 2025 11:06:58 GMT","content-type":"application/vnd.catalyst.v2+json","transfer-encoding":"chunked","connection":"keep-alive","x-content-type-options":"nosniff","cache-control":"private,no-cache,no-store,max-age=0,must-revalidate","pragma":"no-cache","expires":"Thu, 01 Jan 1970 00:00:00 GMT","x-frame-options":"DENY","strict-transport-security":"max-age=64072000; includeSubDomains; preload"}
+

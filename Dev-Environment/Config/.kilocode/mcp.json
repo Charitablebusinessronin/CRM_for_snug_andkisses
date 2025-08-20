@@ -1,0 +1,77 @@
+{
+  "mcpServers": {
+    "notion": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@notionhq/notion-mcp-server"
+      ],
+      "env": {
+        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer ntn_I79481010433dqz9McQwGRkJd5Diw4CeRakuFh6Asax9Hk\", \"Notion-Version\": \"2022-06-28\"}"
+      },
+      "alwaysAllow": [
+        "API-get-users",
+        "API-retrieve-a-page",
+        "API-post-search",
+        "API-post-page",
+        "API-patch-block-children"
+      ]
+    },
+    "playwright-mcp": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@microsoft/playwright-mcp",
+        "--key",
+        "1137429e-cdd6-49a9-aa81-8f05164a7643",
+        "--profile",
+        "willing-primate-apigF3"
+      ],
+      "alwaysAllow": [
+        "browser_navigate",
+        "browser_click",
+        "browser_close",
+        "browser_type"
+      ]
+    },
+    "shadcn-vue-mcp": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@HelloGGX/shadcn-vue-mcp",
+        "--key",
+        "1137429e-cdd6-49a9-aa81-8f05164a7643",
+        "--profile",
+        "willing-primate-apigF3"
+      ]
+    },
+    "desktop-commander": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@wonderwhy-er/desktop-commander",
+        "--key",
+        "1137429e-cdd6-49a9-aa81-8f05164a7643",
+        "--profile",
+        "willing-primate-apigF3"
+      ],
+      "alwaysAllow": [
+        "read_file"
+      ]
+    }
+  }
+}}
+  }
+}

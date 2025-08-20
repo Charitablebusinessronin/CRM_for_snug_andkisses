@@ -1,53 +1,88 @@
-# Use the official Node.js 20 LTS image
+# Multi-stage Dockerfile for Next.js 15.1.8 + React 19.0.0 compatibility
+# Optimized for Windows 11 development with proper dependency resolution
+
+# Use Node.js 20 LTS Alpine for security and performance
 FROM node:20-alpine AS base
 
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# Install system dependencies required for native modules
+RUN apk add --no-cache \
+    libc6-compat \
+    dumb-init
+
+# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-RUN npm ci
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Build the Next.js application
-RUN npm run build
-
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV=production
-# Disable Next.js telemetry during the build
+# Do not set NODE_ENV here; we need devDependencies during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# ==========================================
+# Dependencies stage - Install dependencies only
+# ==========================================
+FROM base AS deps
 
+# Copy package files for dependency installation
+COPY package.json package-lock.json* ./
+
+# Install full dependencies (including dev) for build tools like Tailwind/PostCSS
+RUN npm ci && \
+    npm cache clean --force
+
+# ==========================================
+# Builder stage - Build the application
+# ==========================================
+FROM base AS builder
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
+COPY . .
+
+# Create .env.local if it doesn't exist (for build-time variables)
+RUN touch .env.local
+
+# Build Next.js application with standalone output
+# The standalone output automatically handles dependency optimization
+RUN npm run build
+
+# ==========================================
+# Runner stage - Production runtime
+# ==========================================
+FROM base AS runner
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Set production environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Copy public assets
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# Create .next directory with correct permissions
+RUN mkdir .next && chown nextjs:nodejs .next
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+# Copy the standalone server and static files
+# Next.js standalone output includes all necessary dependencies
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Switch to non-root user
 USER nextjs
 
+# Expose port
 EXPOSE 3000
 
-ENV PORT=3000
+# Health check for container orchestration (single-line -e script)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "const http=require('http');const req=http.request({host:'localhost',port:3000,path:'/',timeout:2000},()=>process.exit(0));req.on('error',()=>process.exit(1));req.on('timeout',()=>process.exit(1));req.end();"
 
-# Server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the server using the standalone output
 CMD ["node", "server.js"]

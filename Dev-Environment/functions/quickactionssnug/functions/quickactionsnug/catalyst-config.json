@@ -1,0 +1,11 @@
+{
+	"deployment": {
+		"name": "quickactionsnug",
+		"stack": "node20",
+		"type": "advancedio",
+		"env_variables": {}
+	},
+	"execution": {
+		"main": "quik.js"
+	}
+}

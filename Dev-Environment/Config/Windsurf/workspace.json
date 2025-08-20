@@ -1,0 +1,213 @@
+{
+  "folders": [
+    {
+      "name": "Development Environment",
+      "path": "../../"
+    },
+    {
+      "name": "Projects",
+      "path": "../../Projects"
+    },
+    {
+      "name": "NextJS Projects",
+      "path": "../../Projects/NextJS"
+    },
+    {
+      "name": "WordPress Projects",
+      "path": "../../Projects/WordPress"
+    },
+    {
+      "name": "Shopify Projects",
+      "path": "../../Projects/Shopify"
+    },
+    {
+      "name": "API Projects",
+      "path": "../../Projects/APIs"
+    },
+    {
+      "name": "Learning Projects",
+      "path": "../../Projects/Learning"
+    },
+    {
+      "name": "Tools",
+      "path": "../../Tools"
+    },
+    {
+      "name": "Scripts",
+      "path": "../../Scripts"
+    },
+    {
+      "name": "Configuration",
+      "path": "../../Config"
+    }
+  ],
+  "settings": {
+    "terminal.integrated.defaultProfile.windows": "WSL",
+    "terminal.integrated.profiles.windows": {
+      "WSL": {
+        "path": "wsl.exe",
+        "args": ["-d", "Ubuntu"],
+        "icon": "terminal-ubuntu"
+      },
+      "PowerShell": {
+        "source": "PowerShell",
+        "icon": "terminal-powershell"
+      },
+      "Command Prompt": {
+        "path": [
+          "${env:windir}\\Sysnative\\cmd.exe",
+          "${env:windir}\\System32\\cmd.exe"
+        ],
+        "args": [],
+        "icon": "terminal-cmd"
+      }
+    },
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    },
+    "files.exclude": {
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/node_modules": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bower_components": true,
+      "**/*.code-search": true
+    },
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "explorer.compactFolders": false,
+    "workbench.colorTheme": "Default Dark Modern",
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.startupEditor": "none",
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.enablePreviewFromQuickOpen": false,
+    "workbench.editor.showTabs": true,
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.editor.tabCloseButton": "right",
+    "workbench.editor.tabSizingFixedMinWidth": 120,
+    "workbench.editor.tabSizingFixedMaxWidth": 240,
+    "workbench.editor.wrapTabs": false,
+    "workbench.editor.decorations.badges": true,
+    "workbench.editor.decorations.colors": true,
+    "workbench.editor.enablePreviewFromCodeNavigation": false,
+    "workbench.editor.focusRecentEditorAfterClose": true,
+    "workbench.editor.highlightModifiedTabs": true,
+    "workbench.editor.labelFormat": "default",
+    "workbench.editor.limit.enabled": false,
+    "workbench.editor.limit.value": 10,
+    "workbench.editor.limit.perEditorGroup": false,
+    "workbench.editor.openPositioning": "right",
+    "workbench.editor.restoreViewState": true,
+    "workbench.editor.revealIfOpen": false,
+    "workbench.editor.showIcons": true,
+    "workbench.editor.splitInGroupLayout": "horizontal",
+    "workbench.editor.splitSizing": "distribute",
+    "workbench.editor.tabCloseButton": "right",
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.editor.untitled.hint": "hidden",
+    "workbench.editor.untitled.labelFormat": "name",
+    "workbench.editor.wrapTabs": false,
+    "workbench.editor.closeEmptyGroups": true,
+    "workbench.editor.closeOnFileDelete": false,
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.enablePreviewFromQuickOpen": false,
+    "workbench.editor.focusRecentEditorAfterClose": true,
+    "workbench.editor.highlightModifiedTabs": true,
+    "workbench.editor.openPositioning": "right",
+    "workbench.editor.revealIfOpen": false,
+    "workbench.editor.showIcons": true,
+    "workbench.editor.splitInGroupLayout": "horizontal",
+    "workbench.editor.splitSizing": "distribute",
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.editor.untitled.hint": "hidden",
+    "workbench.editor.untitled.labelFormat": "name",
+    "workbench.editor.wrapTabs": false,
+    "workbench.editor.closeEmptyGroups": true,
+    "workbench.editor.closeOnFileDelete": false
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "ms-vscode.vscode-typescript-next",
+      "ms-azuretools.vscode-docker",
+      "ms-vscode-remote.remote-wsl",
+      "pkief.material-icon-theme",
+      "mikestead.dotenv",
+      "bradlc.vscode-tailwindcss",
+      "formulahendry.auto-rename-tag",
+      "formulahendry.auto-close-tag",
+      "christian-kohler.path-intellisense",
+      "christian-kohler.npm-intellisense",
+      "eamodio.gitlens",
+      "ms-vscode.powershell",
+      "redhat.vscode-yaml",
+      "mongodb.mongodb-vscode",
+      "cweijan.vscode-postgresql-client2",
+      "ms-vscode.vscode-node-azure-pack"
+    ]
+  },
+  "launch": {
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Next.js",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/Projects/NextJS",
+        "port": 9229,
+        "console": "integratedTerminal"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Express API",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/Projects/APIs",
+        "port": 9229,
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": []
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start Next.js Development",
+        "type": "shell",
+        "command": "cd ${workspaceFolder}/Projects/NextJS && npm run dev",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Start Express API",
+        "type": "shell",
+        "command": "cd ${workspaceFolder}/Projects/APIs && npm run dev",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Start Docker Services",
+        "type": "shell",
+        "command": "${workspaceFolder}/Scripts/Setup/start-docker-services.ps1",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      }
+    ]
+  }
+}

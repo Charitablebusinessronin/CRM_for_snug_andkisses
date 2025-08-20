@@ -1,0 +1,43 @@
+{
+  "service_name": "snugkisses-crm-backend",
+  "source": ".",
+  "stack": "node20",
+  "build_command": "npm install",
+  "start_command": "node server.js",
+  "port": 9000,
+  "environment_variables": {
+    "NODE_ENV": "production",
+    "HIPAA_COMPLIANCE_MODE": "true",
+    "ENABLE_AUDIT_LOGGING": "true",
+    "CATALYST_PROJECT_ID": "30300000000011038",
+    "CATALYST_ENV_ID": "891140386",
+    "X_ZOHO_CATALYST_LISTEN_PORT": "9000"
+  },
+  "scaling": {
+    "min_instances": 1,
+    "max_instances": 10,
+    "cpu_threshold": 70,
+    "memory_threshold": 80
+  },
+  "health_check": {
+    "path": "/health",
+    "port": 9000,
+    "protocol": "https",
+    "timeout": 30,
+    "interval": 60
+  },
+  "security": {
+    "ssl_enabled": true,
+    "force_https": true,
+    "security_headers": {
+      "hsts": "max-age=31536000; includeSubDomains",
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+      "x_frame_options": "DENY",
+      "x_content_type_options": "nosniff"
+    },
+    "rate_limiting": {
+      "requests_per_minute": 100,
+      "burst_limit": 200
+    }
+  }
+}

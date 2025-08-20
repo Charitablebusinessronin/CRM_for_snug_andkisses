@@ -23,9 +23,23 @@ Own infrastructure, deployment, secrets, CI/CD, and operational security. Ensure
 - Monitoring dashboards and alerts for critical functions and web endpoints
 - Runbooks for deploy, rollback, incident response, and rotation processes
 
-### Dependencies
-- Service contracts and endpoints from Troy (`team-docs/troy.md`)
-- Asset specs and build requirements from Allura (`team-docs/allura.md`)
-- Reference docs: `docs/INTEGRATIONS.md`
+### Detailed Workflow with Troy and James
+
+🔴 **IMPORTANT:** Your work is the bridge between development and testing.
+
+**Phase 1: Infrastructure Setup**
+
+1.  **Your Task:** As Troy is building the initial application, you need to set up the "CI/CD workflows" and "deployment scripts".
+2.  **Your Action:** Collaborate with Troy to understand the application's structure and dependencies.
+3.  **DELIVERABLE:** A working CI/CD pipeline that can build, lint, and test Troy's code.
+4.  **HANDOFF:** Provide Troy with the instructions on how to use the pipeline.
+
+**Phase 2: Environment Provisioning**
+
+1.  **Your Task:** You are responsible for "environment variables and secrets" and setting up the testing environments.
+2.  🔴 **STOP!** James cannot start his E2E testing until you have a stable testing environment ready for him.
+3.  **DELIVERABLE:** A fully configured testing environment with all the necessary secrets and database connections.
+4.  **HANDOFF:** Notify James that the environment is ready and provide him with the access details.
+
 
 

@@ -1,0 +1,624 @@
+# 🔧 Deep Code Fixes for Snug & Kisses CRM
+
+**Status**: 🚨 **CRITICAL** - Core logic failures in profile management and user flows
+
+---
+
+## **Fix 1: Profile Creation/Editing Logic**
+
+### **Problem**: Profile operations failing completely
+
+The issue is likely in the form submission and state management logic.
+
+### **Code Fixes**
+
+**1. Fix the Profile Form Handler**
+
+```
+// app/components/ProfileForm.tsx
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function ProfileForm({ userId, existingProfile = null }) {
+  const [profile, setProfile] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    role: '',
+    status: 'active',
+    ...existingProfile
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const endpoint = existingProfile ? `/api/profiles/${userId}` : '/api/profiles';
+      const method = existingProfile ? 'PUT' : 'POST';
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          ...profile,
+          userId: userId || 'anonymous'
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Profile ${method === 'POST' ? 'creation' : 'update'} failed: ${errorData}`);
+      }
+
+      const result = await response.json();
+      
+      // Redirect based on role after successful creation/update
+      const redirectPath = profile.role === 'client' ? '/client/dashboard' 
+                          : profile.role === 'contractor' ? '/contractor/dashboard'
+                          : '/dashboard';
+      
+      router.push(redirectPath);
+      
+    } catch (err) {
+      console.error('Profile operation failed:', err);
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+      
+      <div className="grid grid-cols-2 gap-4">
+        <input
+          type="text"
+          placeholder="First Name"
+          value={profile.firstName}
+          onChange={(e) => setProfile(prev => ({...prev, firstName: [e.target](http://e.target).value}))}
+          required
+          className="border rounded px-3 py-2"
+        />
+        <input
+          type="text"
+          placeholder="Last Name" 
+          value={profile.lastName}
+          onChange={(e) => setProfile(prev => ({...prev, lastName: [e.target](http://e.target).value}))}
+          required
+          className="border rounded px-3 py-2"
+        />
+      </div>
+      
+      <input
+        type="email"
+        placeholder="Email"
+        value={[profile.email](http://profile.email)}
+        onChange={(e) => setProfile(prev => ({...prev, email: [e.target](http://e.target).value}))}
+        required
+        className="w-full border rounded px-3 py-2"
+      />
+      
+      <input
+        type="tel"
+        placeholder="Phone"
+        value={[profile.phone](http://profile.phone)}
+        onChange={(e) => setProfile(prev => ({...prev, phone: [e.target](http://e.target).value}))}
+        className="w-full border rounded px-3 py-2"
+      />
+      
+      <select
+        value={profile.role}
+        onChange={(e) => setProfile(prev => ({...prev, role: [e.target](http://e.target).value}))}
+        required
+        className="w-full border rounded px-3 py-2"
+      >
+        <option value="">Select Role</option>
+        <option value="client">Client</option>
+        <option value="contractor">Contractor/Doula</option>
+        <option value="admin">Administrator</option>
+      </select>
+      
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+      >
+        {isSubmitting ? 'Saving...' : existingProfile ? 'Update Profile' : 'Create Profile'}
+      </button>
+    </form>
+  );
+}
+```
+
+**2. Fix the API Route**
+
+```
+// app/api/profiles/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const profileSchema = z.object({
+  firstName: z.string().min(1, 'First name required'),
+  lastName: z.string().min(1, 'Last name required'),
+  email: z.string().email('Valid email required'),
+  phone: z.string().optional(),
+  role: z.enum(['client', 'contractor', 'admin']),
+  userId: z.string().min(1, 'User ID required')
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validatedData = profileSchema.parse(body);
+    
+    // Database insertion with proper error handling
+    const profileData = {
+      id: crypto.randomUUID(),
+      ...validatedData,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Replace with your actual database call
+    const result = await createProfile(profileData);
+    
+    return NextResponse.json({ 
+      success: true, 
+      profile: result,
+      message: 'Profile created successfully' 
+    }, { status: 201 });
+    
+  } catch (error) {
+    console.error('Profile creation error:', error);
+    
+    if ([error.name](http://error.name) === 'ZodError') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Validation failed',
+        details: error.errors 
+      }, { status: 400 });
+    }
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Profile creation failed',
+      message: error.message 
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    }
+    
+    const body = await request.json();
+    const validatedData = profileSchema.parse(body);
+    
+    const updatedProfile = {
+      ...validatedData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    const result = await updateProfile(userId, updatedProfile);
+    
+    return NextResponse.json({ 
+      success: true, 
+      profile: result,
+      message: 'Profile updated successfully' 
+    });
+    
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Profile update failed',
+      message: error.message 
+    }, { status: 500 });
+  }
+}
+
+// Database functions
+async function createProfile(profileData) {
+  // Replace with your actual database logic
+  // This should handle the actual insertion to your database
+  try {
+    // Example for PostgreSQL with proper error handling
+    const query = `
+      INSERT INTO profiles (id, first_name, last_name, email, phone, role, user_id, status, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *
+    `;
+    
+    const values = [
+      [profileData.id](http://profileData.id),
+      profileData.firstName,
+      profileData.lastName,
+      [profileData.email](http://profileData.email),
+      [profileData.phone](http://profileData.phone),
+      profileData.role,
+      profileData.userId,
+      profileData.status,
+      profileData.createdAt,
+      profileData.updatedAt
+    ];
+    
+    const result = await db.query(query, values);
+    return result.rows[0];
+    
+  } catch (dbError) {
+    console.error('Database insertion error:', dbError);
+    throw new Error(`Database error: ${dbError.message}`);
+  }
+}
+
+async function updateProfile(userId, profileData) {
+  try {
+    const query = `
+      UPDATE profiles 
+      SET first_name = $2, last_name = $3, email = $4, phone = $5, 
+          role = $6, updated_at = $7
+      WHERE user_id = $1
+      RETURNING *
+    `;
+    
+    const values = [
+      userId,
+      profileData.firstName,
+      profileData.lastName,
+      [profileData.email](http://profileData.email),
+      [profileData.phone](http://profileData.phone),
+      profileData.role,
+      profileData.updatedAt
+    ];
+    
+    const result = await db.query(query, values);
+    
+    if (result.rows.length === 0) {
+      throw new Error('Profile not found');
+    }
+    
+    return result.rows[0];
+    
+  } catch (dbError) {
+    console.error('Database update error:', dbError);
+    throw new Error(`Database error: ${dbError.message}`);
+  }
+}
+```
+
+---
+
+## **Fix 2: Authentication State Management**
+
+### **Problem**: Users seeing registration prompts after login
+
+```
+// app/components/AuthWrapper.tsx
+import { createContext, useContext, useState, useEffect } from 'react';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData.user);
+      } else {
+        localStorage.removeItem('authToken');
+        setUser(null);
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (credentials) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('authToken', data.token);
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    setUser(null);
+    window.location.href = '/login';
+  };
+
+  return (
+    <AuthContext.Provider value=
+      user,
+      loading,
+      error,
+      login,
+      logout,
+      checkAuthStatus
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};
+```
+
+**Fix the Conditional Rendering**
+
+```
+// app/components/LoginSection.tsx
+import { useAuth } from './AuthWrapper';
+
+export default function LoginSection() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  // Show different content based on auth status
+  if (user) {
+    return (
+      <div className="user-dashboard">
+        <h2>Welcome back, {user.firstName}!</h2>
+        <div className="user-actions">
+          <button onClick={() => window.location.href = '/dashboard'}>
+            Go to Dashboard
+          </button>
+          <button onClick={() => window.location.href = '/profile'}>
+            Edit Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Only show registration for unauthenticated users
+  return (
+    <div className="welcome-section">
+      <h2>New to Snug & Kisses?</h2>
+      <p>Join our family of expectant and new parents. Get access to professional doula services, postpartum care, lactation support, and personalized care coordination.</p>
+      <div className="auth-buttons">
+        <a href="/register" className="btn btn-primary">
+          Register as New Client
+        </a>
+        <a href="/login" className="btn btn-secondary">
+          Existing User Sign In
+        </a>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## **Fix 3: Database Connection & Error Handling**
+
+### **Problem**: PostgreSQL connection issues and poor error handling
+
+```
+// lib/database.ts
+import { Pool } from 'pg';
+
+class DatabaseConnection {
+  private pool: Pool;
+  private static instance: DatabaseConnection;
+
+  private constructor() {
+    this.pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+      // Add these for better connection handling
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
+    });
+
+    // Handle connection errors
+    this.pool.on('error', (err) => {
+      console.error('Database pool error:', err);
+    });
+
+    this.pool.on('connect', () => {
+      console.log('Database connected successfully');
+    });
+  }
+
+  public static getInstance(): DatabaseConnection {
+    if (!DatabaseConnection.instance) {
+      DatabaseConnection.instance = new DatabaseConnection();
+    }
+    return DatabaseConnection.instance;
+  }
+
+  public async query(text: string, params?: any[]): Promise<any> {
+    const client = await this.pool.connect();
+    try {
+      const start = [Date.now](http://Date.now)();
+      const result = await client.query(text, params);
+      const duration = [Date.now](http://Date.now)() - start;
+      
+      console.log('Executed query', { text, duration, rows: result.rowCount });
+      return result;
+    } catch (error) {
+      console.error('Database query error:', { text, params, error: error.message });
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  public async transaction(callback: (client: any) => Promise<any>): Promise<any> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await callback(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+}
+
+export const db = DatabaseConnection.getInstance();
+```
+
+---
+
+## **Fix 4: Proper Error Boundaries & Logging**
+
+```
+// app/components/ErrorBoundary.tsx
+import React from 'react';
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
+}
+
+export class ErrorBoundary extends React.Component<
+  React.PropsWithChildren<{}>,
+  ErrorBoundaryState
+> {
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error, errorInfo: null };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error Boundary caught an error:', error, errorInfo);
+    
+    // Log to your error reporting service
+    this.logErrorToService(error, errorInfo);
+    
+    this.setState({
+      error,
+      errorInfo
+    });
+  }
+
+  logErrorToService(error: Error, errorInfo: React.ErrorInfo) {
+    // Send to your logging service
+    fetch('/api/errors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        timestamp: new Date().toISOString()
+      })
+    }).catch(err => console.error('Failed to log error:', err));
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-fallback">
+          <h2>Something went wrong</h2>
+          <p>We're sorry, but something went wrong. Please try refreshing the page.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="btn btn-primary"
+          >
+            Refresh Page
+          </button>
+          {process.env.NODE_ENV === 'development' && (
+            <details>
+              <summary>Error Details</summary>
+              <pre>{this.state.error?.stack}</pre>
+            </details>
+          )}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+These fixes address the core logic problems in your system. The key issues were:
+
+1. **Missing proper form validation and error handling**
+2. **Broken authentication state management**
+3. **Database connection pool issues**
+4. **No proper error boundaries**
+
+Implement these code changes and your profile creation, user flows, and core functionality should work properly.

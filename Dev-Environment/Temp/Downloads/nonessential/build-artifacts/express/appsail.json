@@ -1,0 +1,13 @@
+{
+  "service_name": "snugkisses-crm-backend",
+  "source": ".",
+  "stack": "node20",
+  "build_command": "npm install",
+  "start_command": "node server.js",
+  "port": 5369,
+  "environment_variables": {
+    "NODE_ENV": "production",
+    "HIPAA_COMPLIANCE_MODE": "true",
+    "ENABLE_AUDIT_LOGGING": "true"
+  }
+}

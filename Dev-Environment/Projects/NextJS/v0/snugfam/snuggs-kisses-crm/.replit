@@ -1,0 +1,13 @@
+run = "npm run dev"
+hidden = ["node_modules"]
+
+[env]
+NPM_CONFIG_FUND = "false"
+NPM_CONFIG_AUDIT = "false"
+NODE_VERSION = "16.20.2"
+
+[nix]
+channel = "stable-23.11"
+
+
+

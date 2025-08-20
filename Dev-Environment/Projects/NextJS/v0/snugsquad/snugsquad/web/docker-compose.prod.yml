@@ -1,0 +1,40 @@
+version: '3.8'
+
+# Production override for Replit deployment
+# This file contains Replit-specific configurations
+
+services:
+  snugsquad-web:
+    # Override environment for Replit production
+    environment:
+      # Core Configuration
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      
+      # Production URLs (Replit specific)
+      - NEXT_PUBLIC_BASE_URL=https://snugging-kisses-crm-sasheed721.replit.app
+      - NEXT_PUBLIC_REDIRECT_URI=https://notionsnug-crm-sasheed721.replit.app/auth/callback
+      - CORS_ORIGIN=https://snugging-kisses-crm-sasheed721.replit.app
+    
+    # Replit-specific port mapping
+    ports:
+      - "3000:3000"
+    
+    # Production resource limits (adjust for Replit plan)
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+    
+    # Production health check
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 60s

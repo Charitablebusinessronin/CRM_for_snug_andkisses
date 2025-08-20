@@ -1,0 +1,9 @@
+{
+	"name": "project_rainfall_function",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "work@capturefantasy.com",
+	"dependencies": {
+		"zcatalyst-sdk-node": "latest"
+	}
+}

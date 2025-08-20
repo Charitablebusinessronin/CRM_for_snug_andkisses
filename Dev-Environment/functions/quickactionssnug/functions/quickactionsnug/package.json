@@ -1,0 +1,9 @@
+{
+	"name": "quickactionsnug",
+	"version": "1.0.0",
+	"main": "quik.js",
+	"author": "work@capturefantasy.com",
+	"dependencies": {
+		"zcatalyst-sdk-node": "latest"
+	}
+}

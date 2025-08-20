@@ -1,0 +1,26 @@
+{
+  "name": "shopify-app-template",
+  "version": "1.0.0",
+  "description": "Shopify app template with custom port configuration",
+  "main": "web/index.js",
+  "scripts": {
+    "dev": "cross-env PORT=5004 shopify app dev",
+    "build": "shopify app build",
+    "deploy": "shopify app deploy",
+    "info": "shopify app info"
+  },
+  "dependencies": {
+    "@shopify/app": "^3.46.5",
+    "@shopify/cli": "^3.46.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/react": "^18.2.24",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.2.2"
+  },
+  "author": "Sabir Asheed",
+  "license": "MIT"
+}

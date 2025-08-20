@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "name": "Windsurf MCP Integration",
+  "description": "Integration configuration for Windsurf IDE with MCP",
+  "mcp": {
+    "endpoint": "http://localhost:8001/api/v1",
+    "authentication": {
+      "type": "bearer",
+      "token": "YOUR_AUTH_TOKEN_HERE"
+    }
+  },
+  "features": {
+    "codeCompletion": {
+      "enabled": true,
+      "endpoint": "/completion",
+      "port": 8001,
+      "shortcut": "Ctrl+Space",
+      "triggerCharacters": [".", "(", "[", "{", ",", "<", ":", "'", "\"", "/"],
+      "options": {
+        "model": "default",
+        "temperature": 0.2,
+        "maxTokens": 1024
+      }
+    },
+    "codeAnalysis": {
+      "enabled": true,
+      "endpoint": "/analysis",
+      "port": 8002,
+      "shortcut": "Alt+A",
+      "options": {
+        "depth": "deep",
+        "includeMetrics": true
+      }
+    },
+    "documentation": {
+      "enabled": true,
+      "endpoint": "/docs",
+      "port": 8003,
+      "shortcut": "Alt+D",
+      "options": {
+        "format": "markdown",
+        "includeExamples": true
+      }
+    },
+    "testing": {
+      "enabled": true,
+      "endpoint": "/test-generation",
+      "port": 8004,
+      "shortcut": "Alt+T",
+      "options": {
+        "framework": "jest",
+        "coverage": "high"
+      }
+    }
+  },
+  "tools": {
+    "codeSearch": {
+      "enabled": true,
+      "endpoint": "/search",
+      "port": 8005,
+      "shortcut": "Alt+S"
+    },
+    "refactoring": {
+      "enabled": true,
+      "endpoint": "/refactor",
+      "port": 8006,
+      "shortcut": "Alt+R"
+    },
+    "debugging": {
+      "enabled": true,
+      "endpoint": "/debug",
+      "port": 8007,
+      "shortcut": "Alt+B"
+    }
+  },
+  "ui": {
+    "theme": "dark",
+    "position": "sidebar",
+    "showStatusBar": true,
+    "notifications": {
+      "enabled": true,
+      "position": "bottom-right"
+    }
+  },
+  "server": {
+    "command": "powershell.exe",
+    "args": [
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "c:\\Users\\SabirAsheed\\Development\\Dev-Environment\\Scripts\\Setup\\start-mcp-server.ps1"
+    ],
+    "cwd": "c:\\Users\\SabirAsheed\\Development\\Dev-Environment\\Scripts\\Setup"
+  },
+  "logging": {
+    "level": "info",
+    "file": "../../Temp/Logs/windsurf-mcp.log",
+    "console": true
+  }
+}
