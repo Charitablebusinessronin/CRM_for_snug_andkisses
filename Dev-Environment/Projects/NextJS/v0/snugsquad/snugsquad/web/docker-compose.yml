@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  snugsquad-web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      # Add your environment variables here
+      # - CATALYST_PROJECT_ID=your_project_id
+      # - CATALYST_ENVIRONMENT_ID=development
+      # - ZOHO_REGION=us
+    restart: unless-stopped
+    container_name: snugsquad-web
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health_FAKE"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
