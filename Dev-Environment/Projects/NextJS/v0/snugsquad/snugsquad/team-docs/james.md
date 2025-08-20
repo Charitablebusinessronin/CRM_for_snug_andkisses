@@ -3,9 +3,12 @@
 ### Role
 Quality assurance and testing across unit, integration, E2E, performance, and reliability. Gate releases via CI quality bars.
 
+### ✅ Completed Assignments
+- ✅ **Define test strategy and coverage targets (unit, integration, E2E)** - *COMPLETED*
+- ✅ **Set up Jest (unit/integration) and Cypress (E2E) with CI integration** - *COMPLETED*
+- ✅ **Testing infrastructure complete (Jest, Cypress, Playwright)** - *COMPLETED*
+
 ### Active Assignments
-- Define test strategy and coverage targets (unit, integration, E2E)
-- Set up Jest (unit/integration) and Cypress (E2E) with CI integration
 - Unit tests for 12 core Catalyst function endpoints (happy-path, edge, failure)
 - E2E flows for Client planned features:
   - Care plan overview and progress tracking
@@ -30,10 +33,23 @@ Quality assurance and testing across unit, integration, E2E, performance, and re
 - Coverage thresholds documented and met for core modules
 - Defect reports with clear reproduction steps and priority
 
-### Dependencies
-- API contracts and test hooks from Troy (`team-docs/troy.md`)
-- Designs and interaction specs from Allura (`team-docs/allura.md`)
-- CI/CD and environments from Bobo (`team-docs/bobo.md`)
-- Reference docs: `docs/INTEGRATIONS.md`
+### Detailed Workflow with Troy and Bobo
+
+🔴 **IMPORTANT:** You are the gatekeeper of quality. Your work depends on both Troy and Bobo.
+
+**Phase 1: Test Planning**
+
+1.  **Your Task:** While Troy is developing and Bobo is setting up the infrastructure, your job is to "Define test strategy and coverage targets" and "Set up Jest and Cypress".
+2.  **Your Action:** You can do this in parallel with their work.
+
+**Phase 2: Testing Cycle**
+
+1.  **Your Task:** You are assigned to test the "Client portal planned features".
+2.  🔴 **STOP!** You cannot start testing until:
+    *   **Troy** has deployed a version of the client portal to the testing environment.
+    *   **Bobo** has confirmed that the testing environment is stable and ready for use.
+3.  **Your Action:** Once the feature is ready for testing, execute your test plans.
+4.  **HANDOFF:** If you find any bugs, create a detailed bug report and assign it to Troy.
+
 
 
