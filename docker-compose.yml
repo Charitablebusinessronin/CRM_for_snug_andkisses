@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  snugs-kisses-crm:
+    build: .
+    container_name: snugs-kisses-crm-dev
+    ports:
+      - "5369:5369"
+    environment:
+      - NODE_ENV=development
+      - PORT=5369
+      - NEXTAUTH_URL=http://localhost:5369
+      - NEXTAUTH_SECRET=docker-super-secret-jwt-key-for-development-minimum-32-characters-long-secure
+      - NEXT_PUBLIC_APP_URL=http://localhost:5369
+      - HIPAA_CLOUD_BACKUP=false
+      - SESSION_TIMEOUT=900000
+      - TOKEN_ROTATION_INTERVAL=86400000
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - audit-logs:/app/logs
+    networks:
+      - crm-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5369/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # PostgreSQL database for future use
+  postgres:
+    image: postgres:15-alpine
+    container_name: snugs-kisses-db
+    environment:
+      POSTGRES_DB: snugs_kisses_crm
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: secure_password_2025
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - crm-network
+    restart: unless-stopped
+
+  # Redis for session storage and caching
+  redis:
+    image: redis:7-alpine
+    container_name: snugs-kisses-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - crm-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  audit-logs:
+    driver: local
+
+networks:
+  crm-network:
+    driver: bridge

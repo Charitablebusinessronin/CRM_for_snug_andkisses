@@ -1,0 +1,29 @@
+{
+  "defaults": {
+    "project": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "30300000000011038",
+      "name": "Project-Rainfall",
+      "domain": {
+        "id": "10102161895",
+        "name": "project-rainfall.development"
+      },
+      "timezone": "America/New_York",
+      "env": [
+        {
+          "idx": 1,
+          "id": "10102161895",
+          "name": "Production",
+          "type": 1
+        }
+      ]
+    }
+  ]
+}

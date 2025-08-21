@@ -1,0 +1,122 @@
+{
+  "version": 2,
+  "name": "snug-kisses-crm",
+  "build": {
+    "env": {
+      "NODE_ENV": "production",
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "NEXTAUTH_URL": "@nextauth-url",
+    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "JWT_SECRET": "@jwt-secret",
+    "JWT_REFRESH_SECRET": "@jwt-refresh-secret",
+    "MFA_SECRET": "@mfa-secret",
+    "ENCRYPTION_KEY": "@encryption-key",
+    "ZOHO_ONE_CLIENT_ID": "@zoho-client-id",
+    "ZOHO_ONE_CLIENT_SECRET": "@zoho-client-secret",
+    "ZOHO_CATALYST_PROJECT_ID": "@zoho-catalyst-project-id",
+    "DATABASE_URL": "@database-url",
+    "REDIS_URL": "@redis-url",
+    "HIPAA_AUDIT_ENDPOINT": "@hipaa-audit-endpoint",
+    "SENTRY_DSN": "@sentry-dsn"
+  },
+  "functions": {
+    "app/api/**/*.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    },
+    "app/api/auth/**/*.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 10
+    },
+    "app/api/v1/**/*.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 25
+    }
+  },
+  "regions": ["iad1"],
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "/api/v1/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://snugkisses.com"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-Requested-With, Content-Type, Authorization"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/auth/signin",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/admin/dashboard",
+      "permanent": false
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/maintenance/cleanup-expired-tokens",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/maintenance/hipaa-compliance-check",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/maintenance/backup-audit-logs",
+      "schedule": "0 3 * * 0"
+    }
+  ],
+  "installCommand": "npm ci --only=production",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "cleanUrls": true,
+  "trailingSlash": false
+}

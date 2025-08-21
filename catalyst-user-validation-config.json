@@ -1,0 +1,144 @@
+{
+  "project_info": {
+    "project_name": "snugnotion",
+    "project_id": "30300000000035001",
+    "validation_function": "user-validation"
+  },
+  "test_configurations": {
+    "admin_user_test": {
+      "request_type": "add_user",
+      "request_details": {
+        "user_details": {
+          "email_id": "admin@snugandkisses.com",
+          "first_name": "Healthcare",
+          "last_name": "Administrator",
+          "org_id": "1026298298",
+          "role_details": {
+            "role_name": "App Administrator",
+            "role_id": "2000000004073"
+          }
+        },
+        "auth_type": "web"
+      }
+    },
+    "caregiver_test": {
+      "request_type": "add_user",
+      "request_details": {
+        "user_details": {
+          "email_id": "caregiver@snugandkisses.com",
+          "first_name": "Maria",
+          "last_name": "Rodriguez",
+          "org_id": "1026298298",
+          "role_details": {
+            "role_name": "Caregiver",
+            "role_id": "2000000004074"
+          }
+        },
+        "auth_type": "web"
+      }
+    },
+    "client_test": {
+      "request_type": "add_user",
+      "request_details": {
+        "user_details": {
+          "email_id": "client@snugandkisses.com",
+          "first_name": "Sarah",
+          "last_name": "Johnson",
+          "org_id": "1026298298",
+          "role_details": {
+            "role_name": "Client",
+            "role_id": "2000000004075"
+          }
+        },
+        "auth_type": "web"
+      }
+    },
+    "healthcare_provider_test": {
+      "request_type": "add_user",
+      "request_details": {
+        "user_details": {
+          "email_id": "provider@snugandkisses.com",
+          "first_name": "Dr. Jennifer",
+          "last_name": "Smith",
+          "org_id": "1026298298",
+          "role_details": {
+            "role_name": "Healthcare Provider",
+            "role_id": "2000000004076"
+          }
+        },
+        "auth_type": "web"
+      }
+    },
+    "invalid_domain_test": {
+      "request_type": "add_user",
+      "request_details": {
+        "user_details": {
+          "email_id": "test@unauthorized-domain.com",
+          "first_name": "Test",
+          "last_name": "User",
+          "org_id": "1026298298",
+          "role_details": {
+            "role_name": "Client",
+            "role_id": "2000000004075"
+          }
+        },
+        "auth_type": "web"
+      }
+    }
+  },
+  "expected_responses": {
+    "admin_user_test": {
+      "status": "success",
+      "user_status": "active",
+      "message": "User Healthcare Administrator validated successfully"
+    },
+    "caregiver_test": {
+      "status": "success",
+      "user_status": "pending_background_check",
+      "message": "User Maria Rodriguez validated successfully"
+    },
+    "client_test": {
+      "status": "success", 
+      "user_status": "active",
+      "message": "User Sarah Johnson validated successfully"
+    },
+    "healthcare_provider_test": {
+      "status": "success",
+      "user_status": "pending_verification",
+      "message": "User Dr. Jennifer Smith validated successfully"
+    },
+    "invalid_domain_test": {
+      "status": "failure",
+      "user_status": "inactive",
+      "message": "Email domain unauthorized-domain.com not authorized for healthcare access"
+    }
+  },
+  "validation_rules": {
+    "allowed_email_domains": [
+      "snugandkisses.com",
+      "snugnotion.com",
+      "gmail.com",
+      "outlook.com"
+    ],
+    "allowed_roles": [
+      "App Administrator",
+      "Healthcare Admin", 
+      "Care Coordinator",
+      "Caregiver",
+      "Client",
+      "Family Member",
+      "Healthcare Provider",
+      "System Administrator"
+    ],
+    "user_status_mapping": {
+      "App Administrator": "active",
+      "Healthcare Admin": "active", 
+      "System Administrator": "active",
+      "Healthcare Provider": "pending_verification",
+      "Care Coordinator": "pending_verification", 
+      "Client": "active",
+      "Family Member": "active",
+      "Caregiver": "pending_background_check"
+    }
+  }
+}
